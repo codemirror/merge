@@ -95,7 +95,7 @@ export const Spacers = StateField.define<DecorationSet>({
 
 const epsilon = .0001
 
-export function measureSpacers(a: EditorView, b: EditorView, chunks: readonly Chunk[]) {
+export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chunk[]) {
   let buildA = new RangeSetBuilder<Decoration>(), buildB = new RangeSetBuilder<Decoration>()
   let linesA = a.viewportLineBlocks, linesB = b.viewportLineBlocks, iA = 0, iB = 0
   let spacersA = a.state.field(Spacers).iter(), spacersB = b.state.field(Spacers).iter()

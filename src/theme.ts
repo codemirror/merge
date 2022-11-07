@@ -8,12 +8,28 @@ export const externalTheme = EditorView.styleModule.of(new StyleModule({
   ".cm-mergeViewEditors": {
     display: "flex",
     alignItems: "stretch",
+  },
+  ".cm-merge-revert": {
+    width: "1.6em",
+    flexGrow: 0,
+    position: "relative"
+  },
+  ".cm-merge-revert button": {
+    position: "absolute",
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    textAlign: "center",
+    background: "none",
+    border: "none",
+    font: "inherit",
   }
 }))
 
 export const baseTheme = EditorView.baseTheme({
   "&": {
-    flexGrow: 1
+    flexGrow: 1,
+    flexBasis: 0
   },
 
   "& .cm-scroller, &": {

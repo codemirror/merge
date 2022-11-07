@@ -1,7 +1,7 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect} from "@codemirror/state"
 import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, Side} from "./chunk"
-import {decorateChunks, measureSpacers, Spacers, adjustSpacers} from "./deco"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 export type MergeConfig = {
@@ -9,6 +9,7 @@ export type MergeConfig = {
   b: EditorStateConfig
   parent?: Element | DocumentFragment
   root?: Document | ShadowRoot
+  revertControls?: "a-to-b" | "b-to-a"
 }
 
 export class MergeView {
@@ -19,10 +20,12 @@ export class MergeView {
 
   dom: HTMLElement
   private editorDOM: HTMLElement
+  private revertDOM: HTMLElement | null = null
+  private revertToA = false
 
   private chunks: readonly Chunk[]
 
-  private measuringSpacers = -1
+  private measuring = -1
 
   constructor(config: MergeConfig) {
     let sharedExtensions = [
@@ -31,9 +34,9 @@ export class MergeView {
       externalTheme,
       Spacers,
       EditorView.updateListener.of(update => {
-        if (this.measuringSpacers < 0 && (update.heightChanged || update.viewportChanged) &&
+        if (this.measuring < 0 && (update.heightChanged || update.viewportChanged) &&
             !update.transactions.some(tr => tr.effects.some(e => e.is(adjustSpacers))))
-          this.measureSpacers()
+          this.measure()
       })
     ]
 
@@ -72,6 +75,12 @@ export class MergeView {
       root: config.root,
       dispatch: tr => this.dispatch(tr, this.a)
     })
+    if (config.revertControls) {
+      this.revertDOM = this.editorDOM.appendChild(document.createElement("div"))
+      this.revertToA = config.revertControls == "b-to-a"
+      this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
+      this.revertDOM.className = "cm-merge-revert"
+    }
     this.b = new EditorView({
       state: stateB,
       parent: this.editorDOM,
@@ -79,7 +88,7 @@ export class MergeView {
       dispatch: tr => this.dispatch(tr, this.b)
     })
     if (config.parent) config.parent.appendChild(this.dom)
-    this.scheduleMeasureSpacers()
+    this.scheduleMeasure()
   }
 
   dispatch(tr: Transaction, target: EditorView) {
@@ -89,30 +98,81 @@ export class MergeView {
       target.update([tr, tr.state.update({effects: setChunks.of(this.chunks)})])
       let other = target == this.a ? this.b : this.a
       other.update([other.state.update({effects: setChunks.of(this.chunks)})])
-      this.scheduleMeasureSpacers()
+      this.scheduleMeasure()
     } else {
       target.update([tr])
     }
   }
 
-  private scheduleMeasureSpacers() {
-    if (this.measuringSpacers < 0) {
+  private scheduleMeasure() {
+    if (this.measuring < 0) {
       let win = (this.dom.ownerDocument.defaultView || window)
-      this.measuringSpacers = win.requestAnimationFrame(() => {
-        this.measuringSpacers = -1
-        this.measureSpacers()
+      this.measuring = win.requestAnimationFrame(() => {
+        this.measuring = -1
+        this.measure()
       })
     }
   }
 
-  private measureSpacers() {
-    measureSpacers(this.a, this.b, this.chunks)
+  private measure() {
+    updateSpacers(this.a, this.b, this.chunks)
+    if (this.revertDOM) this.updateRevertButtons()
+  }
+
+  private updateRevertButtons() {
+    let dom = this.revertDOM!, next = dom.firstChild as HTMLElement | null
+    let vpA = this.a.viewport, vpB = this.b.viewport
+    for (let i = 0; i < this.chunks.length; i++) {
+      let chunk = this.chunks[i]
+      if (chunk.fromA > vpA.to || chunk.fromB > vpB.to) break
+      if (chunk.fromA < vpA.from || chunk.fromB < vpB.from) continue
+      let top = this.a.lineBlockAt(chunk.fromA).top + "px"
+      while (next && +(next.dataset.chunk!) < i) next = rm(next)
+      if (next && next.dataset.chunk! == String(i)) {
+        if (next.style.top != top) next.style.top = top
+        next = next.nextSibling as HTMLElement | null
+      } else {
+        dom.insertBefore(this.renderRevertButton(top, i), next)
+      }
+    }
+    while (next) next = rm(next)
+  }
+
+  private renderRevertButton(top: string, chunk: number) {
+    let button = document.createElement("button")
+    button.style.top = top
+    button.setAttribute("data-chunk", String(chunk))
+    button.setAttribute("aria-label", this.a.state.phrase("Revert this chunk"))
+    button.textContent = this.revertToA ? "⇜" : "⇝"
+    return button
+  }
+
+  private revertClicked(e: MouseEvent) {
+    let target = e.target as HTMLElement, chunk
+    if (target.nodeName == "BUTTON" && (chunk = this.chunks[target.dataset.chunk as any])) {
+      let [source, dest, srcFrom, srcTo, destFrom, destTo] = this.revertToA
+        ? [this.b, this.a, chunk.fromB, chunk.toB, chunk.fromA, chunk.toA]
+        : [this.a, this.b, chunk.fromA, chunk.toA, chunk.fromB, chunk.toB]
+      let insert = source.state.sliceDoc(srcFrom, srcTo)
+      if (destFrom == destTo) insert += source.state.lineBreak
+      dest.dispatch({
+        changes: {from: destFrom, to: destTo, insert},
+        userEvent: "revert"
+      })
+      e.preventDefault()
+    }
   }
 
   destroy() {
     this.a.destroy()
     this.b.destroy()
-    if (this.measuringSpacers > -1)
-      (this.dom.ownerDocument.defaultView || window).cancelAnimationFrame(this.measuringSpacers)
+    if (this.measuring > -1)
+      (this.dom.ownerDocument.defaultView || window).cancelAnimationFrame(this.measuring)
   }
+}
+
+function rm(elt: HTMLElement) {
+  let next = elt.nextSibling
+  elt.remove()
+  return next as HTMLElement | null
 }
