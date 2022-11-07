@@ -37,23 +37,23 @@ export const baseTheme = EditorView.baseTheme({
     overflow: "visible !important"
   },
 
-  ".cm-changedLine": {
-    backgroundColor: "rgba(150, 255, 0, .1)"
+  ".cm-changedLine, .cm-mergeSpacer": {
+    backgroundColor: "rgba(100, 160, 128, .08)"
   },
 
   "&light.cm-merge-a .cm-changedText": {
-    background: "linear-gradient(#e43, #e43) bottom/100% 1.7px no-repeat",
+    background: "linear-gradient(#e43, #e43) bottom/100% 2px no-repeat",
   },
 
   "&dark.cm-merge-a .cm-changedText": {
-    background: "linear-gradient(#fa9, #fa9) bottom/100% 1.7px no-repeat",
+    background: "linear-gradient(#fa9, #fa9) bottom/100% 2px no-repeat",
   },
 
   "&light.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#2b2, #2b2) bottom/100% 1.7px no-repeat",
+    background: "linear-gradient(#2b2, #2b2) bottom/100% 2px no-repeat",
   },
 
   "&dark.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#8f8, #8f8) bottom/100% 1.7px no-repeat",
+    background: "linear-gradient(#8f8, #8f8) bottom/100% 2px no-repeat",
   },
 })

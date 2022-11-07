@@ -2,8 +2,8 @@ import {Transaction, Text, ChangeSet, StateField, StateEffect, Facet} from "@cod
 import {Changes, diff} from "./diff"
 
 // A chunk holds either a range of lines which have changed content in
-// them (not including lines where the change ends right at the line
-// start), or an empty range.
+// them. `toA`/`toB` points one after the chunk end for non-empty
+// chunks, and may point *after* the end of the document.
 export class Chunk {
   constructor(
     readonly changes: Changes,
@@ -26,8 +26,7 @@ function fromLine(fromA: number, fromB: number, a: Text, b: Text) {
 
 function toLine(toA: number, toB: number, a: Text, b: Text) {
   let lineA = a.lineAt(toA), lineB = b.lineAt(toB)
-  return lineA.from == toA && lineB.from == toB
-    ? [Math.max(0, toA - 1), Math.max(0, toB - 1)] : [lineA.to, lineB.to]
+  return lineA.from == toA && lineB.from == toB ? [toA, toB] : [lineA.to + 1, lineB.to + 1]
 }
 
 function toChunks(changes: Changes, a: Text, b: Text, offA: number, offB: number) {
@@ -36,12 +35,12 @@ function toChunks(changes: Changes, a: Text, b: Text, offA: number, offB: number
     let change = changes[i]
     let [fromA, fromB] = fromLine(change.fromA + offA, change.fromB + offB, a, b)
     let [toA, toB] = toLine(change.toA + offA, change.toB + offB, a, b)
-    let chunk = [change.offset(-fromA, -fromB)]
+    let chunk = [change.offset(-fromA + offA, -fromB + offB)]
     while (i < changes.length - 1) {
       let next = changes[i + 1]
       let [nextA, nextB] = fromLine(next.fromA + offA, next.fromB + offB, a, b)
       if (nextA > toA + 1 && nextB > toB + 1) break
-      chunk.push(next.offset(-fromA, -fromB))
+      chunk.push(next.offset(-fromA + offA, -fromB + offB))
       ;[toA, toB] = toLine(next.toA + offA, next.toB + offB, a, b)
       i++
     }
@@ -62,21 +61,21 @@ type UpdateRange = {fromA: number, toA: number, fromB: number, toB: number, diff
 // chunk it overlaps with if it overlaps, or a position corresponding
 // to that position on both sides otherwise.
 function findPos(
-  chunks: readonly Chunk[], pos: number, isA: boolean
-): {fromA: number, toA: number, fromB: number, toB: number} {
+  chunks: readonly Chunk[], pos: number, isA: boolean, start: boolean
+): [number, number] {
   let lo = 0, hi = chunks.length
   for (;;) {
     if (lo == hi) {
       let refA = 0, refB = 0
       if (lo) ({toA: refA, toB: refB} = chunks[lo - 1])
-      let off = pos - (isA ? refA : refB), posA = refA + off, posB = refB + off
-      return {fromA: posA, toA: posA, fromB: posB, toB: posB}
+      let off = pos - (isA ? refA : refB)
+      return [refA + off, refB + off]
     }
     let mid = (lo + hi) >> 1, chunk = chunks[mid]
     let [from, to] = isA ? [chunk.fromA, chunk.toA] : [chunk.fromB, chunk.toB]
     if (from > pos) hi = mid
-    else if (to < pos) lo = mid + 1
-    else return chunk
+    else if (to <= pos) lo = mid + 1
+    else return start ? [chunk.fromA, chunk.fromB] : [chunk.toA, chunk.toB]
   }
 }
 
@@ -86,9 +85,9 @@ function findRangesForChange(chunks: readonly Chunk[], changes: ChangeSet, isA: 
     let fromA = 0, toA = isA ? changes.length : otherLen
     let fromB = 0, toB = isA ? otherLen : changes.length
     if (cFromA > updateMargin)
-      ({fromA, fromB} = findPos(chunks, cFromA - updateMargin, isA))
+      [fromA, fromB] = findPos(chunks, cFromA - updateMargin, isA, true)
     if (cToA < changes.length - updateMargin)
-      ({toA, toB} = findPos(chunks, cToA + updateMargin, isA))
+      [toA, toB] = findPos(chunks, cToA + updateMargin, isA, false)
     let lenDiff = (cToB - cFromB) - (cToA - cFromA), last
     let [diffA, diffB] = isA ? [lenDiff, 0] : [0, lenDiff]
     if (ranges.length && (last = ranges[ranges.length - 1]).toA >= fromA)
@@ -110,7 +109,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
 
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (next.toA + offA < fromA) result.push(next.offset(offA, offB))
+      if (next.toA + offA <= fromA) result.push(next.offset(offA, offB))
       else if (next.fromA + offA > toA) break
       chunkI++
     }

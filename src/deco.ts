@@ -27,23 +27,26 @@ const changedText = Decoration.mark({class: "cm-changedText"})
 function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, builder: RangeSetBuilder<Decoration>) {
   let from = isA ? chunk.fromA : chunk.fromB, to = isA ? chunk.toA : chunk.toB
   let changeI = 0
-  if (from != to) for (let iter = doc.iterRange(from, to), pos = from; !iter.next().done;) {
-    if (iter.lineBreak) {
-      pos++
-      continue
+  if (from != to) {
+    builder.add(from, from, changedLine)
+    for (let iter = doc.iterRange(from, to - 1), pos = from; !iter.next().done;) {
+      if (iter.lineBreak) {
+        pos++
+        builder.add(pos, pos, changedLine)
+        continue
+      }
+      let lineEnd = pos + iter.value.length
+      while (changeI < chunk.changes.length) {
+        let nextChange = chunk.changes[changeI]
+        let nextFrom = from + (isA ? nextChange.fromA : nextChange.fromB)
+        let nextTo = from + (isA ? nextChange.toA : nextChange.toB)
+        let chFrom = Math.max(pos, nextFrom), chTo = Math.min(lineEnd, nextTo)
+        if (chFrom < chTo) builder.add(chFrom, chTo, changedText)
+        if (nextTo < lineEnd) changeI++
+        else break
+      }
+      pos = lineEnd
     }
-    builder.add(pos, pos, changedLine)
-    let lineEnd = pos + iter.value.length
-    while (changeI < chunk.changes.length) {
-      let nextChange = chunk.changes[changeI]
-      let nextFrom = from + (isA ? nextChange.fromA : nextChange.fromB)
-      let nextTo = from + (isA ? nextChange.toA : nextChange.toB)
-      let chFrom = Math.max(pos, nextFrom), chTo = Math.min(lineEnd, nextTo)
-      if (chFrom < chTo) builder.add(chFrom, chTo, changedText)
-      if (nextTo < lineEnd) changeI++
-      else break
-    }
-    pos = lineEnd
   }
 }
 
@@ -143,8 +146,7 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
       }
     }
     if (!chunk) break
-    posA = chunk.toA + (chunk.toA == chunk.fromA ? 0 : 1)
-    posB = chunk.toB + (chunk.toB == chunk.fromB ? 0 : 1)
+    posA = chunk.toA; posB = chunk.toB
   }
 
   let decoA = buildA.finish(), decoB = buildB.finish()

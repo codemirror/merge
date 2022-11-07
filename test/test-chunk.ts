@@ -13,16 +13,16 @@ linesB.splice(699, 50, "line ??", "line !!")
 let docA = Text.of(linesA), docB = Text.of(linesB)
 
 describe("chunks", () => {
-  it("enumerates named chunks", () => {
+  it("enumerates changed chunks", () => {
     let chunks = getChunks(docA, docB)
     ist(chunks.length, 2)
 
     let [ch1, ch2] = chunks
-    ist([ch1.fromA, ch1.toA], [docA.line(500).from, docA.line(500).to], byJSON)
-    ist([ch1.fromB, ch1.toB], [docB.line(500).from, docB.line(500).to], byJSON)
+    ist([ch1.fromA, ch1.toA], [docA.line(500).from, docA.line(501).from], byJSON)
+    ist([ch1.fromB, ch1.toB], [docB.line(500).from, docB.line(501).from], byJSON)
 
-    ist([ch2.fromA, ch2.toA], [docA.line(700).from, docA.line(749).to], byJSON)
-    ist([ch2.fromB, ch2.toB], [docB.line(700).from, docB.line(701).to], byJSON)
+    ist([ch2.fromA, ch2.toA], [docA.line(700).from, docA.line(750).from], byJSON)
+    ist([ch2.fromB, ch2.toB], [docB.line(700).from, docB.line(702).from], byJSON)
 
     ist(ch2.changes.length, 2)
     let [c1, c2] = ch2.changes
@@ -38,7 +38,7 @@ describe("chunks", () => {
     let chunks1 = updateChunksA(chunks, tr1, stateB.doc)
     ist(chunks1.length, 3)
     let [ch1, ch2] = chunks1
-    ist([ch1.fromA, ch1.toA, ch1.fromB, ch1.toB], [0, 9, 0, 0], byJSON)
+    ist([ch1.fromA, ch1.toA, ch1.fromB, ch1.toB], [0, 10, 0, 0], byJSON)
     ist([ch2.fromA, ch2.fromB], [tr1.newDoc.line(501).from, stateB.doc.line(500).from], byJSON)
     stateA = tr1.state
 
@@ -46,13 +46,13 @@ describe("chunks", () => {
       {from: stateB.doc.line(600).from + 1, insert: "---"},
       {from: stateB.doc.length, insert: "\n???"}
     ]})
-    let chunks2 = updateChunksB(chunks, tr2, stateA.doc)
+    let chunks2 = updateChunksB(chunks1, tr2, stateA.doc)
     ist(chunks2.length, 5)
     let [, , ch3, , ch5] = chunks2
-    ist([ch3.fromA, ch3.toA], [stateA.doc.line(601).from, stateA.doc.line(601).to], byJSON)
-    ist([ch3.fromB, ch3.toB], [tr2.newDoc.line(600).from, tr2.newDoc.line(600).to], byJSON)
-    ist([ch5.fromA, ch5.toA], [stateA.doc.length, stateA.doc.length], byJSON)
-    ist([ch5.fromB, ch5.toB], [tr2.newDoc.length - 3, tr2.newDoc.length], byJSON)
+    ist([ch3.fromA, ch3.toA], [stateA.doc.line(601).from, stateA.doc.line(602).from], byJSON)
+    ist([ch3.fromB, ch3.toB], [tr2.newDoc.line(600).from, tr2.newDoc.line(601).from], byJSON)
+    ist([ch5.fromA, ch5.toA], [stateA.doc.length, stateA.doc.length + 1], byJSON)
+    ist([ch5.fromB, ch5.toB], [tr2.newDoc.length - 3, tr2.newDoc.length + 1], byJSON)
   })
 
   it("can handle deleting updates", () => {
@@ -61,6 +61,8 @@ describe("chunks", () => {
 
     let tr = stateA.update({changes: {from: 0, to: 100}})
     let chunks1 = updateChunksA(chunks, tr, docB)
-    console.log(chunks1)
+    ist(chunks1.length, 3)
+    ist(chunks1.map(c => c.fromA), [0, 4283, 6083], byJSON)
+    ist(chunks1.map(c => c.fromB), [0, 4383, 6181], byJSON)
   })
 })
