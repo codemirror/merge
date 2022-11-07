@@ -1,5 +1,7 @@
-import {diff, Changes} from "@codemirror/merge"
+import {diff} from "@codemirror/merge"
 import ist from "ist"
+
+type Changes = readonly {fromA: number, toA: number, fromB: number, toB: number}[]
 
 function apply(diff: Changes, orig: string, changed: string) {
   let pos = 0, result = ""

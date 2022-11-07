@@ -4,20 +4,35 @@ import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, S
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
-export type MergeConfig = {
+type MergeConfig = {
+  /// Configuration for the first editor (the left one in a
+  /// left-to-right context).
   a: EditorStateConfig
+  /// Configuration for the second editor.
   b: EditorStateConfig
+  /// Parent element to append the view to.
   parent?: Element | DocumentFragment
+  /// An optional root. Only necessary if the view is mounted in a
+  /// shadow root or a document other than the global `document`
+  /// object.
   root?: Document | ShadowRoot
+  /// Controls whether revert controls are shown between changed
+  /// chunks.
   revertControls?: "a-to-b" | "b-to-a"
 }
 
+/// A merge view manages two editors side-by-side, highlighting the
+/// difference between them and vertically aligning unchanged lines.
+///
+/// By default, views are not scrollable. Style them (`.cm-mergeView`)
+/// with a height and `overflow: auto` to make them scrollable.
 export class MergeView {
   /// The first editor.
   a: EditorView
   /// The second editor.
   b: EditorView
 
+  /// The outer DOM element holding the view.
   dom: HTMLElement
   private editorDOM: HTMLElement
   private revertDOM: HTMLElement | null = null
@@ -27,6 +42,7 @@ export class MergeView {
 
   private measuring = -1
 
+  /// Create a new merge view.
   constructor(config: MergeConfig) {
     let sharedExtensions = [
       decorateChunks,
@@ -91,7 +107,7 @@ export class MergeView {
     this.scheduleMeasure()
   }
 
-  dispatch(tr: Transaction, target: EditorView) {
+  private dispatch(tr: Transaction, target: EditorView) {
     if (tr.docChanged) {
       this.chunks = target == this.a ? updateChunksA(this.chunks, tr, this.b.state.doc)
         : updateChunksB(this.chunks, tr, this.a.state.doc)
@@ -163,11 +179,13 @@ export class MergeView {
     }
   }
 
+  /// Destroy this merge view.
   destroy() {
     this.a.destroy()
     this.b.destroy()
     if (this.measuring > -1)
       (this.dom.ownerDocument.defaultView || window).cancelAnimationFrame(this.measuring)
+    this.dom.remove()
   }
 }
 

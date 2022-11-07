@@ -10,8 +10,6 @@ export class Change {
   }
 }
 
-/// A set of ranges that changed between two strings, each with start
-/// and end positions in both documents.
 export type Changes = Change[]
 
 function findDiff(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Changes {
@@ -275,8 +273,6 @@ function validIndex(s: string, index: number) {
   return code < 0xD800 || code > 0xDBFF || (code2 = s.charCodeAt(index)) < 0xDC00 || code2 > 0xDFFF
 }
 
-/// Compute the difference between two strings. Returns an array of
-/// changed ranges (empty when the strings are identical).
 export function diff(a: string, b: string) {
   return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
 }
