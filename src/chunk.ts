@@ -1,5 +1,4 @@
-import {Transaction, Text, ChangeSet, Range} from "@codemirror/state"
-import {Decoration} from "@codemirror/view"
+import {Transaction, Text, ChangeSet, StateField, StateEffect, Facet} from "@codemirror/state"
 import {Changes, diff} from "./diff"
 
 // A chunk holds either a range of lines which have changed content in
@@ -10,16 +9,11 @@ export class Chunk {
     readonly changes: Changes,
     readonly fromA: number, readonly toA: number,
     readonly fromB: number, readonly toB: number,
-    /// @internal
-    public decoA: readonly Range<Decoration>[] | null = null,
-    /// @internal
-    public decoB: readonly Range<Decoration>[] | null = null
   ) {}
 
   offset(offA: number, offB: number) {
     return offA || offB
-      ? new Chunk(this.changes, this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB,
-                  this.decoA, this.decoB)
+      ? new Chunk(this.changes, this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB)
       : this
   }
 }
@@ -60,7 +54,7 @@ export function getChunks(a: Text, b: Text): readonly Chunk[] {
   return toChunks(diff(a.toString(), b.toString()), a, b, 0, 0)
 }
 
-const updateMargin = 2048
+const updateMargin = 1000
 
 type UpdateRange = {fromA: number, toA: number, fromB: number, toB: number, diffA: number, diffB: number}
 
@@ -113,9 +107,11 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
   for (let range of ranges) {
     let fromA = range.fromA + offA, toA = range.toA + offA + range.diffA
     let fromB = range.fromB + offB, toB = range.toB + offB + range.diffB
-    let next
-    while (chunkI < chunks.length && toA >= (next = chunks[chunkI]).toA) {
-      if (next.toA <= fromA) result.push(next.offset(offA, offB))
+
+    while (chunkI < chunks.length) {
+      let next = chunks[chunkI]
+      if (next.toA + offA < fromA) result.push(next.offset(offA, offB))
+      else if (next.fromA + offA > toA) break
       chunkI++
     }
     for (let chunk of toChunks(diff(a.sliceString(fromA, toA), b.sliceString(fromB, toB)), a, b, fromA, fromB))
@@ -123,7 +119,8 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
     offA += range.diffA
     offB += range.diffB
   }
-  while (chunkI < chunks.length) result.push(chunks[chunkI++].offset(offA, offB))
+  while (chunkI < chunks.length)
+    result.push(chunks[chunkI++].offset(offA, offB))
   return result
 }
 
@@ -136,3 +133,19 @@ export function updateChunksA(chunks: readonly Chunk[], transaction: Transaction
 export function updateChunksB(chunks: readonly Chunk[], transaction: Transaction, a: Text) {
   return updateChunks(findRangesForChange(chunks, transaction.changes, false, a.length), chunks, a, transaction.newDoc)
 }
+
+export const setChunks = StateEffect.define<readonly Chunk[]>()
+
+export const ChunkField = StateField.define<readonly Chunk[]>({
+  create(state) {
+    return null as any
+  },
+  update(current, tr) {
+    for (let e of tr.effects) if (e.is(setChunks)) current = e.value
+    return current
+  }
+})
+
+export const Side = Facet.define<string, string>({
+  combine: values => values[0] || "a"
+})

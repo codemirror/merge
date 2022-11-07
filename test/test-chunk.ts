@@ -54,4 +54,13 @@ describe("chunks", () => {
     ist([ch5.fromA, ch5.toA], [stateA.doc.length, stateA.doc.length], byJSON)
     ist([ch5.fromB, ch5.toB], [tr2.newDoc.length - 3, tr2.newDoc.length], byJSON)
   })
+
+  it("can handle deleting updates", () => {
+    let stateA = EditorState.create({doc: docA})
+    let chunks = getChunks(stateA.doc, docB)
+
+    let tr = stateA.update({changes: {from: 0, to: 100}})
+    let chunks1 = updateChunksA(chunks, tr, docB)
+    console.log(chunks1)
+  })
 })
