@@ -4,16 +4,18 @@ import {Chunk, ChunkField, Side} from "./chunk"
 
 export const sibling = Facet.define<() => EditorView>()
 
+export const highlightChanges = Facet.define<boolean, boolean>({combine: values => !!values[0]})
+
 export const decorateChunks = Prec.low(ViewPlugin.fromClass(class {
   deco: DecorationSet
 
   constructor(view: EditorView) {
-    this.deco = getChunkDeco(view, view.state.field(ChunkField))
+    this.deco = getChunkDeco(view)
   }
 
   update(update: ViewUpdate) {
     if (update.docChanged || update.viewportChanged || chunksChanged(update.startState, update.state))
-      this.deco = getChunkDeco(update.view, update.state.field(ChunkField))
+      this.deco = getChunkDeco(update.view)
   }
 }, {
   decorations: d => d.deco
@@ -26,7 +28,7 @@ function chunksChanged(s1: EditorState, s2: EditorState) {
 const changedLine = Decoration.line({class: "cm-changedLine"})
 const changedText = Decoration.mark({class: "cm-changedText"})
 
-function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, builder: RangeSetBuilder<Decoration>) {
+function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolean, builder: RangeSetBuilder<Decoration>) {
   let from = isA ? chunk.fromA : chunk.fromB, to = isA ? chunk.toA : chunk.toB
   let changeI = 0
   if (from != to) {
@@ -38,7 +40,7 @@ function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, builder: RangeSet
         continue
       }
       let lineEnd = pos + iter.value.length
-      while (changeI < chunk.changes.length) {
+      if (highlight) while (changeI < chunk.changes.length) {
         let nextChange = chunk.changes[changeI]
         let nextFrom = from + (isA ? nextChange.fromA : nextChange.fromB)
         let nextTo = from + (isA ? nextChange.toA : nextChange.toB)
@@ -52,13 +54,15 @@ function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, builder: RangeSet
   }
 }
 
-function getChunkDeco(view: EditorView, chunks: readonly Chunk[]) {
+function getChunkDeco(view: EditorView) {
+  let chunks = view.state.field(ChunkField)
   let isA = view.state.facet(Side) == "a"
+  let highlight = view.state.facet(highlightChanges)
   let builder = new RangeSetBuilder<Decoration>()
   let {from, to} = view.viewport
   for (let chunk of chunks) {
     if ((isA ? chunk.fromA : chunk.fromB) >= to) break
-    if ((isA ? chunk.toA : chunk.toB) > from) buildChunkDeco(chunk, view.state.doc, isA, builder)
+    if ((isA ? chunk.toA : chunk.toB) > from) buildChunkDeco(chunk, view.state.doc, isA, highlight, builder)
   }
   return builder.finish()
 }
@@ -201,7 +205,7 @@ class CollapseWidget extends WidgetType {
 
   ignoreEvent(e: Event) { return e instanceof MouseEvent }
 
-  get estimatedHeight() { return 25 }
+  get estimatedHeight() { return 27 }
 }
 
 function mapPos(pos: number, chunks: readonly Chunk[], isA: boolean) {

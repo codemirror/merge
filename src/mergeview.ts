@@ -1,7 +1,7 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect} from "@codemirror/state"
 import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, Side} from "./chunk"
-import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, sibling} from "./deco"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, sibling, highlightChanges} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 type MergeConfig = {
@@ -22,6 +22,9 @@ type MergeConfig = {
   /// When given, this function is called to render the button to
   /// revert a chunk.
   renderRevertControl?: () => HTMLElement,
+  /// By default, the merge view will mark inserted and deleted text
+  /// in changed chunks. Set this to false to turn that off.
+  highlightChanges?: boolean,
   /// When given, long stretches of unchanged text are collapsed.
   /// `margin` gives the number of lines to leave visible after/before
   /// a change (default is 3), and `minSize` gives the minimum amount
@@ -64,7 +67,8 @@ export class MergeView {
         if (this.measuring < 0 && (update.heightChanged || update.viewportChanged) &&
             !update.transactions.some(tr => tr.effects.some(e => e.is(adjustSpacers))))
           this.measure()
-      })
+      }),
+      highlightChanges.of(config.highlightChanges !== false)
     ]
 
     let stateA = EditorState.create({
