@@ -43,19 +43,19 @@ export const baseTheme = EditorView.baseTheme({
   },
 
   "&light.cm-merge-a .cm-changedText": {
-    background: "linear-gradient(#e43, #e43) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#ee443366, #ee443366) bottom/100% 2px no-repeat",
   },
 
   "&dark.cm-merge-a .cm-changedText": {
-    background: "linear-gradient(#fa9, #fa9) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#ffaa9966, #ffaa9966) bottom/100% 2px no-repeat",
   },
 
   "&light.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#2b2, #2b2) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#22bb2266, #22bb2266) bottom/100% 2px no-repeat",
   },
 
   "&dark.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#8f8, #8f8) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
   },
 
   ".cm-collapsedLines": {

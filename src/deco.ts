@@ -234,7 +234,7 @@ function buildCollapsedRanges(state: EditorState, margin: number, minLines: numb
   let prevLine = 1
   for (let i = 0;; i++) {
     let chunk = i < chunks.length ? chunks[i] : null
-    let collapseFrom = prevLine > 1 ? prevLine + margin : 1
+    let collapseFrom = i ? prevLine + margin : 1
     let collapseTo = chunk ? state.doc.lineAt(isA ? chunk.fromA : chunk.fromB).number - 1 - margin : state.doc.lines
     let lines = collapseTo - collapseFrom + 1
     if (lines >= minLines) {
