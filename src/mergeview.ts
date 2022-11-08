@@ -1,7 +1,8 @@
 import {EditorView} from "@codemirror/view"
-import {EditorStateConfig, Transaction, EditorState, StateEffect} from "@codemirror/state"
-import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, Side} from "./chunk"
-import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, sibling, highlightChanges} from "./deco"
+import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec} from "@codemirror/state"
+import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField} from "./chunk"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
+        mergeConfig, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 type MergeConfig = {
@@ -25,6 +26,9 @@ type MergeConfig = {
   /// By default, the merge view will mark inserted and deleted text
   /// in changed chunks. Set this to false to turn that off.
   highlightChanges?: boolean,
+  /// Controls whether the `cm-changedLineGutter` class is added to
+  /// the gutter of changed lines. On by default.
+  markGutter?: boolean,
   /// When given, long stretches of unchanged text are collapsed.
   /// `margin` gives the number of lines to leave visible after/before
   /// a change (default is 3), and `minSize` gives the minimum amount
@@ -59,7 +63,8 @@ export class MergeView {
   /// Create a new merge view.
   constructor(config: MergeConfig) {
     let sharedExtensions = [
-      decorateChunks,
+      Prec.low(decorateChunks),
+      config.markGutter !== false ? Prec.low(changeGutter) : [],
       baseTheme,
       externalTheme,
       Spacers,
@@ -68,7 +73,6 @@ export class MergeView {
             !update.transactions.some(tr => tr.effects.some(e => e.is(adjustSpacers))))
           this.measure()
       }),
-      highlightChanges.of(config.highlightChanges !== false)
     ]
 
     let stateA = EditorState.create({
@@ -76,9 +80,13 @@ export class MergeView {
       selection: config.a.selection,
       extensions: [
         config.a.extensions || [],
-        Side.of("a"),
         EditorView.editorAttributes.of({class: "cm-merge-a"}),
-        sibling.of(() => this.b),
+        mergeConfig.of({
+          side: "a",
+          sibling: () => this.b,
+          highlightChanges: config.highlightChanges !== false,
+          markGutter: config.markGutter !== false
+        }),
         sharedExtensions
       ]
     })
@@ -87,9 +95,13 @@ export class MergeView {
       selection: config.b.selection,
       extensions: [
         config.b.extensions || [],
-        Side.of("b"),
         EditorView.editorAttributes.of({class: "cm-merge-b"}),
-        sibling.of(() => this.a),
+        mergeConfig.of({
+          side: "b",
+          sibling: () => this.a,
+          highlightChanges: config.highlightChanges !== false,
+          markGutter: config.markGutter !== false
+        }),
         sharedExtensions
       ]
     })

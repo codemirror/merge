@@ -144,7 +144,3 @@ export const ChunkField = StateField.define<readonly Chunk[]>({
     return current
   }
 })
-
-export const Side = Facet.define<string, string>({
-  combine: values => values[0] || "a"
-})

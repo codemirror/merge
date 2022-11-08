@@ -1,25 +1,40 @@
-import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate, WidgetType} from "@codemirror/view"
-import {EditorState, RangeSetBuilder, Text, Prec, StateField, StateEffect, RangeSet, Facet} from "@codemirror/state"
-import {Chunk, ChunkField, Side} from "./chunk"
+import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate,
+        WidgetType, GutterMarker, gutter} from "@codemirror/view"
+import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Facet} from "@codemirror/state"
+import {Chunk, ChunkField} from "./chunk"
 
-export const sibling = Facet.define<() => EditorView>()
+type MergeConfig = {
+  sibling: () => EditorView,
+  highlightChanges: boolean,
+  markGutter: boolean,
+  side: "a" | "b"
+}
 
-export const highlightChanges = Facet.define<boolean, boolean>({combine: values => !!values[0]})
+export const mergeConfig = Facet.define<MergeConfig, MergeConfig>({
+  combine: values => values[0]
+})
 
-export const decorateChunks = Prec.low(ViewPlugin.fromClass(class {
+export const decorateChunks = ViewPlugin.fromClass(class {
   deco: DecorationSet
+  gutter: RangeSet<GutterMarker> | null
 
   constructor(view: EditorView) {
-    this.deco = getChunkDeco(view)
+    ({deco: this.deco, gutter: this.gutter} = getChunkDeco(view))
   }
 
   update(update: ViewUpdate) {
     if (update.docChanged || update.viewportChanged || chunksChanged(update.startState, update.state))
-      this.deco = getChunkDeco(update.view)
+      ({deco: this.deco, gutter: this.gutter} = getChunkDeco(update.view))
   }
 }, {
   decorations: d => d.deco
-}))
+})
+
+export const changeGutter = gutter({
+  class: "cm-changeGutter",
+  markers: view => view.plugin(decorateChunks)?.gutter || RangeSet.empty,
+  renderEmptyElements: false
+})
 
 function chunksChanged(s1: EditorState, s2: EditorState) {
   return s1.field(ChunkField, false) != s2.field(ChunkField, false)
@@ -28,15 +43,23 @@ function chunksChanged(s1: EditorState, s2: EditorState) {
 const changedLine = Decoration.line({class: "cm-changedLine"})
 const changedText = Decoration.mark({class: "cm-changedText"})
 
-function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolean, builder: RangeSetBuilder<Decoration>) {
+const changedLineGutterMarker = new class extends GutterMarker {
+  elementClass = "cm-changedLineGutter"
+}
+
+function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolean,
+                        builder: RangeSetBuilder<Decoration>,
+                        gutterBuilder: RangeSetBuilder<GutterMarker> | null) {
   let from = isA ? chunk.fromA : chunk.fromB, to = isA ? chunk.toA : chunk.toB
   let changeI = 0
   if (from != to) {
     builder.add(from, from, changedLine)
+    if (gutterBuilder) gutterBuilder.add(from, from, changedLineGutterMarker)
     for (let iter = doc.iterRange(from, to - 1), pos = from; !iter.next().done;) {
       if (iter.lineBreak) {
         pos++
         builder.add(pos, pos, changedLine)
+        if (gutterBuilder) gutterBuilder.add(pos, pos, changedLineGutterMarker)
         continue
       }
       let lineEnd = pos + iter.value.length
@@ -56,15 +79,16 @@ function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolea
 
 function getChunkDeco(view: EditorView) {
   let chunks = view.state.field(ChunkField)
-  let isA = view.state.facet(Side) == "a"
-  let highlight = view.state.facet(highlightChanges)
+  let {side, highlightChanges, markGutter} = view.state.facet(mergeConfig), isA = side == "a"
   let builder = new RangeSetBuilder<Decoration>()
+  let gutterBuilder = markGutter ? new RangeSetBuilder<GutterMarker>() : null
   let {from, to} = view.viewport
   for (let chunk of chunks) {
     if ((isA ? chunk.fromA : chunk.fromB) >= to) break
-    if ((isA ? chunk.toA : chunk.toB) > from) buildChunkDeco(chunk, view.state.doc, isA, highlight, builder)
+    if ((isA ? chunk.toA : chunk.toB) > from)
+      buildChunkDeco(chunk, view.state.doc, isA, highlightChanges, builder, gutterBuilder)
   }
-  return builder.finish()
+  return {deco: builder.finish(), gutter: gutterBuilder && gutterBuilder.finish()}
 }
 
 class Spacer extends WidgetType {
@@ -197,8 +221,8 @@ class CollapseWidget extends WidgetType {
     outer.addEventListener("click", e => {
       let pos = view.posAtDOM(e.target as HTMLElement)
       view.dispatch({effects: uncollapse.of(pos)})
-      let other = view.state.facet(sibling)[0]()
-      other.dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), view.state.facet(Side) == "a"))})
+      let {side, sibling} = view.state.facet(mergeConfig)
+      sibling().dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), side == "a"))})
     })
     return outer
   }

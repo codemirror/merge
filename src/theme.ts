@@ -69,5 +69,11 @@ export const baseTheme = EditorView.baseTheme({
   "&dark .cm-collapsedLines": {
     color: "#ddd",
     background: "linear-gradient(to bottom, transparent 0, #222 30%, #222 70%, transparent 100%)"
-  }
+  },
+
+  ".cm-changeGutter": { width: "3px", paddingLeft: "1px" },
+  "&light.cm-merge-a .cm-changedLineGutter": { background: "#e43" },
+  "&dark.cm-merge-a .cm-changedLineGutter": { background: "#fa9" },
+  "&light.cm-merge-b .cm-changedLineGutter": { background: "#2b2" },
+  "&dark.cm-merge-b .cm-changedLineGutter": { background: "#8f8" },
 })
