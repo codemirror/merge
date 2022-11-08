@@ -1,7 +1,7 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect} from "@codemirror/state"
 import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, Side} from "./chunk"
-import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged} from "./deco"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, sibling} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 type MergeConfig = {
@@ -74,6 +74,7 @@ export class MergeView {
         config.a.extensions || [],
         Side.of("a"),
         EditorView.editorAttributes.of({class: "cm-merge-a"}),
+        sibling.of(() => this.b),
         sharedExtensions
       ]
     })
@@ -84,6 +85,7 @@ export class MergeView {
         config.b.extensions || [],
         Side.of("b"),
         EditorView.editorAttributes.of({class: "cm-merge-b"}),
+        sibling.of(() => this.a),
         sharedExtensions
       ]
     })

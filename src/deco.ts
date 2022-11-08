@@ -1,6 +1,8 @@
 import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate, WidgetType} from "@codemirror/view"
-import {EditorState, RangeSetBuilder, Text, Prec, StateField, StateEffect, RangeSet} from "@codemirror/state"
+import {EditorState, RangeSetBuilder, Text, Prec, StateField, StateEffect, RangeSet, Facet} from "@codemirror/state"
 import {Chunk, ChunkField, Side} from "./chunk"
+
+export const sibling = Facet.define<() => EditorView>()
 
 export const decorateChunks = Prec.low(ViewPlugin.fromClass(class {
   deco: DecorationSet
@@ -190,8 +192,9 @@ class CollapseWidget extends WidgetType {
     outer.textContent = "⦚ " + view.state.phrase("$ unchanged lines", this.lines) + " ⦚"
     outer.addEventListener("click", e => {
       let pos = view.posAtDOM(e.target as HTMLElement)
-      console.log("clicked at", pos)
       view.dispatch({effects: uncollapse.of(pos)})
+      let other = view.state.facet(sibling)[0]()
+      other.dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), view.state.facet(Side) == "a"))})
     })
     return outer
   }
@@ -199,6 +202,15 @@ class CollapseWidget extends WidgetType {
   ignoreEvent(e: Event) { return e instanceof MouseEvent }
 
   get estimatedHeight() { return 25 }
+}
+
+function mapPos(pos: number, chunks: readonly Chunk[], isA: boolean) {
+  let startOur = 0, startOther = 0
+  for (let i = 0;; i++) {
+    let next = i < chunks.length ? chunks[i] : null
+    if (!next || (isA ? next.fromA : next.fromB) >= pos) return startOther + (pos - startOur)
+    ;[startOur, startOther] = isA ? [next.toA, next.toB] : [next.toB, next.toA]
+  }
 }
 
 const CollapsedRanges = StateField.define<DecorationSet>({
