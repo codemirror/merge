@@ -19,6 +19,7 @@ type MergeConfig = {
   /// Controls whether revert controls are shown between changed
   /// chunks.
   revertControls?: "a-to-b" | "b-to-a"
+  renderRevertControl?: () => HTMLElement
 }
 
 /// A merge view manages two editors side-by-side, highlighting the
@@ -37,6 +38,7 @@ export class MergeView {
   private editorDOM: HTMLElement
   private revertDOM: HTMLElement | null = null
   private revertToA = false
+  private renderRevert: (() => HTMLElement) | undefined
 
   private chunks: readonly Chunk[]
 
@@ -96,6 +98,7 @@ export class MergeView {
     if (config.revertControls) {
       this.revertDOM = this.editorDOM.appendChild(document.createElement("div"))
       this.revertToA = config.revertControls == "b-to-a"
+      this.renderRevert = config.renderRevertControl
       this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
       this.revertDOM.className = "cm-merge-revert"
     }
@@ -159,17 +162,23 @@ export class MergeView {
   }
 
   private renderRevertButton(top: string, chunk: number) {
-    let button = document.createElement("button")
-    button.style.top = top
-    button.setAttribute("data-chunk", String(chunk))
-    button.setAttribute("aria-label", this.a.state.phrase("Revert this chunk"))
-    button.textContent = this.revertToA ? "⇜" : "⇝"
-    return button
+    let elt
+    if (this.renderRevert) {
+      elt = this.renderRevert()
+    } else {
+      elt = document.createElement("button")
+      elt.setAttribute("aria-label", this.a.state.phrase("Revert this chunk"))
+      elt.textContent = this.revertToA ? "⇜" : "⇝"
+    }
+    elt.style.top = top
+    elt.setAttribute("data-chunk", String(chunk))
+    return elt
   }
 
   private revertClicked(e: MouseEvent) {
-    let target = e.target as HTMLElement, chunk
-    if (target.nodeName == "BUTTON" && (chunk = this.chunks[target.dataset.chunk as any])) {
+    let target = e.target as HTMLElement | null, chunk
+    while (target && target.parentNode != this.revertDOM) target = target.parentNode as HTMLElement | null
+    if (target && (chunk = this.chunks[target.dataset.chunk as any])) {
       let [source, dest, srcFrom, srcTo, destFrom, destTo] = this.revertToA
         ? [this.b, this.a, chunk.fromB, chunk.toB, chunk.fromA, chunk.toA]
         : [this.a, this.b, chunk.fromA, chunk.toA, chunk.fromB, chunk.toB]
