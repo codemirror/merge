@@ -29,6 +29,7 @@ export const externalTheme = EditorView.styleModule.of(new StyleModule({
     background: "none",
     border: "none",
     font: "inherit",
+    cursor: "pointer"
   }
 }))
 

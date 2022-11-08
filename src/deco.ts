@@ -3,14 +3,14 @@ import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate,
 import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Facet} from "@codemirror/state"
 import {Chunk, ChunkField} from "./chunk"
 
-type MergeConfig = {
+type Config = {
   sibling: () => EditorView,
   highlightChanges: boolean,
   markGutter: boolean,
   side: "a" | "b"
 }
 
-export const mergeConfig = Facet.define<MergeConfig, MergeConfig>({
+export const mergeConfig = Facet.define<Config, Config>({
   combine: values => values[0]
 })
 

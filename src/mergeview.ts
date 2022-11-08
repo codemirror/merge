@@ -26,9 +26,8 @@ type MergeConfig = {
   /// By default, the merge view will mark inserted and deleted text
   /// in changed chunks. Set this to false to turn that off.
   highlightChanges?: boolean,
-  /// Controls whether the `cm-changedLineGutter` class is added to
-  /// the gutter of changed lines. On by default.
-  markGutter?: boolean,
+  /// Controls whether a gutter marker is shown next to changed lines.
+  gutter?: boolean,
   /// When given, long stretches of unchanged text are collapsed.
   /// `margin` gives the number of lines to leave visible after/before
   /// a change (default is 3), and `minSize` gives the minimum amount
@@ -64,7 +63,7 @@ export class MergeView {
   constructor(config: MergeConfig) {
     let sharedExtensions = [
       Prec.low(decorateChunks),
-      config.markGutter !== false ? Prec.low(changeGutter) : [],
+      config.gutter !== false ? Prec.low(changeGutter) : [],
       baseTheme,
       externalTheme,
       Spacers,
@@ -85,7 +84,7 @@ export class MergeView {
           side: "a",
           sibling: () => this.b,
           highlightChanges: config.highlightChanges !== false,
-          markGutter: config.markGutter !== false
+          markGutter: config.gutter !== false
         }),
         sharedExtensions
       ]
@@ -100,7 +99,7 @@ export class MergeView {
           side: "b",
           sibling: () => this.a,
           highlightChanges: config.highlightChanges !== false,
-          markGutter: config.markGutter !== false
+          markGutter: config.gutter !== false
         }),
         sharedExtensions
       ]
@@ -199,7 +198,9 @@ export class MergeView {
       elt = this.renderRevert()
     } else {
       elt = document.createElement("button")
-      elt.setAttribute("aria-label", this.a.state.phrase("Revert this chunk"))
+      let text = this.a.state.phrase("Revert this chunk")
+      elt.setAttribute("aria-label", text)
+      elt.setAttribute("title", text)
       elt.textContent = this.revertToA ? "⇜" : "⇝"
     }
     elt.style.top = top
