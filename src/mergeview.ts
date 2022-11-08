@@ -1,7 +1,7 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect} from "@codemirror/state"
 import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField, Side} from "./chunk"
-import {decorateChunks, updateSpacers, Spacers, adjustSpacers} from "./deco"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 type MergeConfig = {
@@ -19,11 +19,20 @@ type MergeConfig = {
   /// Controls whether revert controls are shown between changed
   /// chunks.
   revertControls?: "a-to-b" | "b-to-a"
-  renderRevertControl?: () => HTMLElement
+  /// When given, this function is called to render the button to
+  /// revert a chunk.
+  renderRevertControl?: () => HTMLElement,
+  /// When given, long stretches of unchanged text are collapsed.
+  /// `margin` gives the number of lines to leave visible after/before
+  /// a change (default is 3), and `minSize` gives the minimum amount
+  /// of collapsible lines that need to be present (defaults to 4).
+  collapseUnchanged?: {margin?: number, minSize?: number}
 }
 
 /// A merge view manages two editors side-by-side, highlighting the
 /// difference between them and vertically aligning unchanged lines.
+/// If you want one of the editors to be read-only, you have to
+/// configure that in its extensions.
 ///
 /// By default, views are not scrollable. Style them (`.cm-mergeView`)
 /// with a height and `overflow: auto` to make them scrollable.
@@ -79,9 +88,14 @@ export class MergeView {
       ]
     })
     this.chunks = getChunks(stateA.doc, stateB.doc)
-    let field = ChunkField.init(() => this.chunks)
-    stateA = stateA.update({effects: StateEffect.appendConfig.of(field)}).state
-    stateB = stateB.update({effects: StateEffect.appendConfig.of(field)}).state
+    let addA = [ChunkField.init(() => this.chunks)], addB = addA.slice()
+    if (config.collapseUnchanged) {
+      let {margin = 3, minSize = 4} = config.collapseUnchanged
+      addA.push(collapseUnchanged(margin, minSize, true))
+      addB.push(collapseUnchanged(margin, minSize, false))
+    }
+    stateA = stateA.update({effects: StateEffect.appendConfig.of(addA)}).state
+    stateB = stateB.update({effects: StateEffect.appendConfig.of(addB)}).state
 
     this.dom = document.createElement("div")
     this.dom.className = "cm-mergeView"

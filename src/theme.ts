@@ -38,7 +38,7 @@ export const baseTheme = EditorView.baseTheme({
     overflowY: "visible !important"
   },
 
-  ".cm-changedLine, .cm-mergeSpacer": {
+  ".cm-changedLine": {
     backgroundColor: "rgba(100, 160, 128, .08)"
   },
 
@@ -57,4 +57,17 @@ export const baseTheme = EditorView.baseTheme({
   "&dark.cm-merge-b .cm-changedText": {
     background: "linear-gradient(#8f8, #8f8) bottom/100% 2px no-repeat",
   },
+
+  ".cm-collapsedLines": {
+    padding: "5px 5px 5px 10px",
+    cursor: "pointer"
+  },
+  "&light .cm-collapsedLines": {
+    color: "#444",
+    background: "linear-gradient(to bottom, transparent 0, #f3f3f3 30%, #f3f3f3 70%, transparent 100%)"
+  },
+  "&dark .cm-collapsedLines": {
+    color: "#ddd",
+    background: "linear-gradient(to bottom, transparent 0, #222 30%, #222 70%, transparent 100%)"
+  }
 })

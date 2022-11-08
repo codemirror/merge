@@ -174,3 +174,65 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
   if (!RangeSet.eq([decoB], [b.state.field(Spacers)]))
     b.dispatch({effects: adjustSpacers.of(decoB)})
 }
+
+const uncollapse = StateEffect.define<number>({
+  map: (value, change) => change.mapPos(value)
+})
+
+class CollapseWidget extends WidgetType {
+  constructor(readonly lines: number) { super() }
+
+  eq(other: CollapseWidget) { return this.lines == other.lines }
+
+  toDOM(view: EditorView) {
+    let outer = document.createElement("div")
+    outer.className = "cm-collapsedLines"
+    outer.textContent = "⦚ " + view.state.phrase("$ unchanged lines", this.lines) + " ⦚"
+    outer.addEventListener("click", e => {
+      let pos = view.posAtDOM(e.target as HTMLElement)
+      console.log("clicked at", pos)
+      view.dispatch({effects: uncollapse.of(pos)})
+    })
+    return outer
+  }
+
+  ignoreEvent(e: Event) { return e instanceof MouseEvent }
+
+  get estimatedHeight() { return 25 }
+}
+
+const CollapsedRanges = StateField.define<DecorationSet>({
+  create(state) { return Decoration.none },
+  update(deco, tr) {
+    deco = deco.map(tr.changes)
+    for (let e of tr.effects) if (e.is(uncollapse))
+      deco = deco.update({filter: from => from != e.value})
+    return deco
+  },
+  provide: f => EditorView.decorations.from(f)
+})
+
+export function collapseUnchanged(margin: number, minLines: number, isA: boolean) {
+  return CollapsedRanges.init(state => buildCollapsedRanges(state, margin, minLines, isA))
+}
+
+function buildCollapsedRanges(state: EditorState, margin: number, minLines: number, isA: boolean) {
+  let builder = new RangeSetBuilder<Decoration>()
+  let chunks = state.field(ChunkField)
+  let prevLine = 1
+  for (let i = 0;; i++) {
+    let chunk = i < chunks.length ? chunks[i] : null
+    let collapseFrom = prevLine > 1 ? prevLine + margin : 1
+    let collapseTo = chunk ? state.doc.lineAt(isA ? chunk.fromA : chunk.fromB).number - 1 - margin : state.doc.lines
+    let lines = collapseTo - collapseFrom + 1
+    if (lines >= minLines) {
+      builder.add(state.doc.line(collapseFrom).from, state.doc.line(collapseTo).to, Decoration.replace({
+        widget: new CollapseWidget(lines),
+        block: true
+      }))
+    }
+    if (!chunk) break
+    prevLine = state.doc.lineAt(Math.min(state.doc.length, isA ? chunk.toA : chunk.toB)).number
+  }
+  return builder.finish()
+}
