@@ -148,6 +148,14 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
     if (!chunk) break
     posA = chunk.toA; posB = chunk.toB
   }
+  while (spacersA.value) {
+    offA -= (spacersA.value.spec.widget as any).height
+    spacersA.next()
+  }
+  while (spacersB.value) {
+    offB -= (spacersB.value.spec.widget as any).height
+    spacersB.next()
+  }
   let docDiff = (a.contentHeight + offA) - (b.contentHeight + offB)
   if (docDiff < epsilon) buildA.add(a.state.doc.length, a.state.doc.length, Decoration.widget({
     widget: new Spacer(-docDiff),
