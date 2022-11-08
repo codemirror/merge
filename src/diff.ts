@@ -218,18 +218,20 @@ function halfMatch(
   return match1 && (!match2 || match2[2] < match1[2]) ? match1 : match2
 }
 
+function mergeAdjacent(changes: Changes, minGap: number) {
+  for (let i = 1; i < changes.length; i++) {
+    let prev = changes[i - 1], cur = changes[i]
+    if (prev.toA > cur.fromA - minGap && prev.toB > cur.fromB - minGap) {
+      changes[i - 1] = new Change(prev.fromA, cur.toA, prev.fromB, cur.toB)
+      changes.splice(i--, 1)
+    }
+  }
+}
 
 // Reorder and merge changes
 function normalize(a: string, b: string, changes: Changes) {
   for (;;) {
-    // Merge adjacent changes
-    for (let i = 1; i < changes.length; i++) {
-      let prev = changes[i - 1], cur = changes[i]
-      if (prev.toA == cur.fromA && prev.toB == cur.fromB) {
-        changes[i - 1] = new Change(prev.fromA, cur.toA, prev.fromB, cur.toB)
-        changes.splice(i--, 1)
-      }
-    }
+    mergeAdjacent(changes, 1)
     let moved = false
     // Move unchanged ranges that can be fully moved across an
     // adjacent insertion/deletion, to simplify the diff.
@@ -265,14 +267,106 @@ function normalize(a: string, b: string, changes: Changes) {
   return changes
 }
 
+// Process a change set to make it suitable for presenting to users.
+function makePresentable(changes: Changes, a: string, b: string) {
+  for (let posA = 0, i = 0; i < changes.length; i++) {
+    let change = changes[i]
+    let lenA = change.toA - change.fromA, lenB = change.toB - change.fromB
+    // Don't touch short insertions or deletions.
+    if (lenA && lenB || lenA > 3 || lenB > 3) {
+      let boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
+      let nextChangeA = i == changes.length - 1 ? a.length : changes[i + 1].fromA
+      let boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
+      let lenBefore = change.fromA - boundBefore, lenAfter = boundAfter - change.toA
+      // An insertion or deletion that falls inside words on both
+      // sides can maybe be moved to align with word boundaries.
+      if (lenBefore && lenAfter && (!lenA || !lenB)) {
+        let changeLen = Math.max(lenA, lenB)
+        let [changeText, changeFrom, changeTo] = lenA ? [a, change.fromA, change.toA] : [b, change.fromB, change.toB]
+        if (changeLen > lenBefore &&
+            a.slice(boundBefore, change.fromA) == changeText.slice(changeTo - lenBefore, changeTo)) {
+          change = changes[i] = new Change(boundBefore, boundBefore + lenA, change.fromB - lenBefore, change.toB - lenBefore)
+          boundBefore = change.fromA
+          boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
+        } else if (changeLen > lenAfter &&
+                   a.slice(change.toA, boundAfter) == changeText.slice(changeFrom, changeFrom + lenAfter)) {
+          change = changes[i] = new Change(boundAfter - lenA, boundAfter, change.fromB + lenAfter, change.toB + lenAfter)
+          boundAfter = change.toA
+          boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
+        }
+        lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
+      }
+      // Grow the change to the word boundaries.
+      if (lenBefore || lenAfter) {
+        change = changes[i] = new Change(change.fromA - lenBefore, change.toA + lenAfter,
+                                         change.fromB - lenBefore, change.toB + lenAfter)
+      }
+      posA = change.toA
+    }
+  }
+
+  mergeAdjacent(changes, 3)
+  return changes
+}
+
+let wordChar: RegExp | null
+try { wordChar = new RegExp("[\\p{Alphabetic}\\p{Number}]", "u") } catch (_) {}
+
+function asciiWordChar(code: number) {
+  return code > 48 && code < 58 || code > 64 && code < 91 || code > 96 && code < 123
+}
+
+function wordCharAfter(s: string, pos: number) {
+  if (pos == s.length) return 0
+  let next = s.charCodeAt(pos)
+  if (next < 192) return asciiWordChar(next) ? 1 : 0
+  if (!wordChar) return 0
+  if (!isSurrogate1(next) || pos == s.length - 1) return wordChar.test(String.fromCharCode(next)) ? 1 : 0
+  return wordChar.test(s.slice(pos, pos + 2)) ? 2 : 0
+}
+
+function wordCharBefore(s: string, pos: number) {
+  if (!pos) return 0
+  let prev = s.charCodeAt(pos - 1)
+  if (prev < 192) return asciiWordChar(prev) ? 1 : 0
+  if (!wordChar) return 0
+  if (!isSurrogate2(prev) || pos == 1) return wordChar.test(String.fromCharCode(prev)) ? 1 : 0
+  return wordChar.test(s.slice(pos - 2, pos)) ? 2 : 0
+}
+
+function findWordBoundaryAfter(s: string, pos: number, max: number) {
+  if (pos == s.length || !wordCharBefore(s, pos)) return pos
+  for (let cur = pos, end = pos + max;;) {
+    let size = wordCharAfter(s, cur)
+    if (!size) return cur
+    cur += size
+    if (cur > end) return pos
+  }
+}
+
+function findWordBoundaryBefore(s: string, pos: number, max: number) {
+  if (!pos || !wordCharAfter(s, pos)) return pos
+  for (let cur = pos, end = pos - max;;) {
+    let size = wordCharBefore(s, cur)
+    if (!size) return cur
+    cur -= size
+    if (cur < end) return pos
+  }
+}
+
+const isSurrogate1 = (code: number) => code >= 0xD800 && code <= 0xDBFF
+const isSurrogate2 = (code: number) => code >= 0xDC00 && code <= 0xDFFF
+
 // Returns false if index looks like it is in the middle of a
 // surrogate pair.
 function validIndex(s: string, index: number) {
-  if (!index || index == s.length) return true
-  let code = s.charCodeAt(index - 1), code2
-  return code < 0xD800 || code > 0xDBFF || (code2 = s.charCodeAt(index)) < 0xDC00 || code2 > 0xDFFF
+  return !index || index == s.length || !isSurrogate1(s.charCodeAt(index - 1)) || !isSurrogate2(s.charCodeAt(index))
 }
 
 export function diff(a: string, b: string) {
   return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
+}
+
+export function presentableDiff(a: string, b: string) {
+  return makePresentable(diff(a, b), a, b)
 }

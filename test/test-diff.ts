@@ -1,7 +1,5 @@
-import {diff} from "@codemirror/merge"
+import {diff, presentableDiff, Changes} from "@codemirror/merge"
 import ist from "ist"
-
-type Changes = readonly {fromA: number, toA: number, fromB: number, toB: number}[]
 
 function apply(diff: Changes, orig: string, changed: string) {
   let pos = 0, result = ""
@@ -89,4 +87,44 @@ describe("diff", () => {
       ist(apply(d, a, b), b)
     }
   })
+})
+
+function parseDiff(d: string) {
+  let change = /\[(.*?)\/(.*?)\]/g
+  return {a: d.replace(change, (_, a) => a),
+          b: d.replace(change, (_, _a, b) => b)}
+}
+
+function serializeDiff(diff: Changes, a: string, b: string) {
+  let posA = 0, result = ""
+  for (let ch of diff) {
+    result += a.slice(posA, ch.fromA) + "[" + a.slice(ch.fromA, ch.toA) + "/" + b.slice(ch.fromB, ch.toB) + "]"
+    posA = ch.toA
+  }
+  return result + a.slice(posA)
+}
+
+describe("presentableDiff", () => {
+  function test(name: string, diff: string) {
+    it(name, () => {
+      let {a, b} = parseDiff(diff)
+      let result = presentableDiff(a, b)
+      ist(serializeDiff(result, a, b), diff)
+      ist(apply(result, a, b), b)
+    })
+  }
+
+  test("grows changes to word start", "one [two/twi] three")
+  test("grows changes to word end", "one [iwo/two] three")
+  test("grows changes from both sides", "[drop/drip]")
+
+  test("doesn't grow short insertions", "blo[/o]p")
+  test("doesn't grow short deletions", "blo[o/]p")
+  test("does grow long insertions", "[oaks/oaktrees]")
+  test("does grow long deletions", "[oaktrees/oaks]")
+
+  test("aligns to the end of words", "fromA[/ + offA]")
+  test("aligns to the start of words", "[offA + /]fromA")
+
+  test("removes small unchanged ranges", "[one->two/a->b]")
 })

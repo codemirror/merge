@@ -1,5 +1,5 @@
 import {Transaction, Text, ChangeSet, StateField, StateEffect, Facet} from "@codemirror/state"
-import {Changes, diff} from "./diff"
+import {Changes, presentableDiff} from "./diff"
 
 // A chunk holds either a range of lines which have changed content in
 // them. `toA`/`toB` points one after the chunk end for non-empty
@@ -50,7 +50,7 @@ function toChunks(changes: Changes, a: Text, b: Text, offA: number, offB: number
 }
 
 export function getChunks(a: Text, b: Text): readonly Chunk[] {
-  return toChunks(diff(a.toString(), b.toString()), a, b, 0, 0)
+  return toChunks(presentableDiff(a.toString(), b.toString()), a, b, 0, 0)
 }
 
 const updateMargin = 1000
@@ -113,7 +113,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
       else if (next.fromA + offA > toA) break
       chunkI++
     }
-    for (let chunk of toChunks(diff(a.sliceString(fromA, toA), b.sliceString(fromB, toB)), a, b, fromA, fromB))
+    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB)), a, b, fromA, fromB))
       result.push(chunk)
     offA += range.diffA
     offB += range.diffB
