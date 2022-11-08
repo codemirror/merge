@@ -148,6 +148,17 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
     if (!chunk) break
     posA = chunk.toA; posB = chunk.toB
   }
+  let docDiff = (a.contentHeight + offA) - (b.contentHeight + offB)
+  if (docDiff < epsilon) buildA.add(a.state.doc.length, a.state.doc.length, Decoration.widget({
+    widget: new Spacer(-docDiff),
+    block: true,
+    side: 1
+  }))
+  else if (docDiff > epsilon) buildB.add(b.state.doc.length, b.state.doc.length, Decoration.widget({
+    widget: new Spacer(docDiff),
+    block: true,
+    side: 1
+  }))
 
   let decoA = buildA.finish(), decoB = buildB.finish()
   if (!RangeSet.eq([decoA], [a.state.field(Spacers)]))
