@@ -127,4 +127,6 @@ describe("presentableDiff", () => {
   test("aligns to the start of words", "[offA + /]fromA")
 
   test("removes small unchanged ranges", "[one->two/a->b]")
+
+  test("moves indentation after a change", "x\n[   foo/]\n   bar\n   baz")
 })

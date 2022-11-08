@@ -274,27 +274,37 @@ function makePresentable(changes: Changes, a: string, b: string) {
     let lenA = change.toA - change.fromA, lenB = change.toB - change.fromB
     // Don't touch short insertions or deletions.
     if (lenA && lenB || lenA > 3 || lenB > 3) {
-      let boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
       let nextChangeA = i == changes.length - 1 ? a.length : changes[i + 1].fromA
-      let boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
+      let maxScanBefore = change.fromA - posA, maxScanAfter = nextChangeA - change.toA
+      let boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(maxScanBefore, 5))
+      let boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(maxScanAfter, 5))
       let lenBefore = change.fromA - boundBefore, lenAfter = boundAfter - change.toA
-      // An insertion or deletion that falls inside words on both
-      // sides can maybe be moved to align with word boundaries.
-      if (lenBefore && lenAfter && (!lenA || !lenB)) {
+      if (!lenA || !lenB) {
         let changeLen = Math.max(lenA, lenB)
         let [changeText, changeFrom, changeTo] = lenA ? [a, change.fromA, change.toA] : [b, change.fromB, change.toB]
-        if (changeLen > lenBefore &&
-            a.slice(boundBefore, change.fromA) == changeText.slice(changeTo - lenBefore, changeTo)) {
-          change = changes[i] = new Change(boundBefore, boundBefore + lenA, change.fromB - lenBefore, change.toB - lenBefore)
-          boundBefore = change.fromA
-          boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
-        } else if (changeLen > lenAfter &&
-                   a.slice(change.toA, boundAfter) == changeText.slice(changeFrom, changeFrom + lenAfter)) {
-          change = changes[i] = new Change(boundAfter - lenA, boundAfter, change.fromB + lenAfter, change.toB + lenAfter)
-          boundAfter = change.toA
-          boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
+        let indentBefore, indentLen
+        // An insertion or deletion that falls inside words on both
+        // sides can maybe be moved to align with word boundaries.
+        if (lenBefore && lenAfter) {
+          if (changeLen > lenBefore &&
+              a.slice(boundBefore, change.fromA) == changeText.slice(changeTo - lenBefore, changeTo)) {
+            change = changes[i] = new Change(boundBefore, boundBefore + lenA, change.fromB - lenBefore, change.toB - lenBefore)
+            boundBefore = change.fromA
+            boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
+          } else if (changeLen > lenAfter &&
+                     a.slice(change.toA, boundAfter) == changeText.slice(changeFrom, changeFrom + lenAfter)) {
+            change = changes[i] = new Change(boundAfter - lenA, boundAfter, change.fromB + lenAfter, change.toB + lenAfter)
+            boundAfter = change.toA
+            boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
+          }
+          lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
+        // Indentation before the change is repeated at its end. Move it across.
+        } else if (!lenBefore && !lenAfter &&
+                   (indentLen = change.fromA - (indentBefore = findIndentBefore(a, change.fromA, maxScanBefore))) &&
+                   a.slice(indentBefore, change.fromA) == changeText.slice(changeTo - indentLen, changeTo)) {
+          change = changes[i] = new Change(indentBefore, indentBefore + lenA,
+                                           change.fromB - indentLen, change.toB - indentLen)
         }
-        lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
       }
       // Grow the change to the word boundaries.
       if (lenBefore || lenAfter) {
@@ -351,6 +361,15 @@ function findWordBoundaryBefore(s: string, pos: number, max: number) {
     if (!size) return cur
     cur -= size
     if (cur < end) return pos
+  }
+}
+
+function findIndentBefore(s: string, pos: number, max: number) {
+  for (let cur = pos, end = pos - max;;) {
+    let next = cur ? s.charCodeAt(cur - 1) : 10
+    if (next == 10) return cur
+    cur--
+    if (cur < end || (next != 32 && next != 9)) return pos
   }
 }
 
