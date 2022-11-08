@@ -1,4 +1,4 @@
-import {Transaction, Text, ChangeSet, StateField, StateEffect, Facet} from "@codemirror/state"
+import {Transaction, Text, ChangeSet, StateField, StateEffect} from "@codemirror/state"
 import {Changes, presentableDiff} from "./diff"
 
 // A chunk holds either a range of lines which have changed content in
