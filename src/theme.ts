@@ -3,15 +3,21 @@ import {StyleModule} from "style-mod"
 
 export const externalTheme = EditorView.styleModule.of(new StyleModule({
   ".cm-mergeView": {
-    overflow: "auto",
+    overflowY: "auto",
   },
   ".cm-mergeViewEditors": {
     display: "flex",
     alignItems: "stretch",
   },
+  ".cm-mergeViewEditor": {
+    flexGrow: 1,
+    flexBasis: 0,
+    overflow: "hidden"
+  },
   ".cm-merge-revert": {
     width: "1.6em",
     flexGrow: 0,
+    flexShrink: 0,
     position: "relative"
   },
   ".cm-merge-revert button": {
@@ -27,14 +33,9 @@ export const externalTheme = EditorView.styleModule.of(new StyleModule({
 }))
 
 export const baseTheme = EditorView.baseTheme({
-  "&": {
-    flexGrow: 1,
-    flexBasis: 0
-  },
-
   "& .cm-scroller, &": {
     height: "auto !important",
-    overflow: "visible !important"
+    overflowY: "visible !important"
   },
 
   ".cm-changedLine, .cm-mergeSpacer": {

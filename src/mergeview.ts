@@ -85,9 +85,11 @@ export class MergeView {
     this.dom.className = "cm-mergeView"
     this.editorDOM = this.dom.appendChild(document.createElement("div"))
     this.editorDOM.className = "cm-mergeViewEditors"
+    let wrapA = this.editorDOM.appendChild(document.createElement("div"))
+    wrapA.className = "cm-mergeViewEditor"
     this.a = new EditorView({
       state: stateA,
-      parent: this.editorDOM,
+      parent: wrapA,
       root: config.root,
       dispatch: tr => this.dispatch(tr, this.a)
     })
@@ -97,9 +99,11 @@ export class MergeView {
       this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
       this.revertDOM.className = "cm-merge-revert"
     }
+    let wrapB = this.editorDOM.appendChild(document.createElement("div"))
+    wrapB.className = "cm-mergeViewEditor"
     this.b = new EditorView({
       state: stateB,
-      parent: this.editorDOM,
+      parent: wrapB,
       root: config.root,
       dispatch: tr => this.dispatch(tr, this.b)
     })
