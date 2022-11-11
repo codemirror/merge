@@ -39,7 +39,10 @@ export const baseTheme = EditorView.baseTheme({
     overflowY: "visible !important"
   },
 
-  ".cm-changedLine": {
+  "&.cm-merge-a .cm-changedLine": {
+    backgroundColor: "rgba(160, 128, 100, .08)"
+  },
+  "&.cm-merge-b .cm-changedLine": {
     backgroundColor: "rgba(100, 160, 128, .08)"
   },
 
