@@ -17,6 +17,9 @@ type MergeConfig = {
   /// shadow root or a document other than the global `document`
   /// object.
   root?: Document | ShadowRoot
+  /// Controls whether editor A or editor B is shown first. Defaults
+  /// to `"a-b"`.
+  orientation?: "a-b" | "b-a",
   /// Controls whether revert controls are shown between changed
   /// chunks.
   revertControls?: "a-to-b" | "b-to-a"
@@ -53,6 +56,7 @@ export class MergeView {
   private editorDOM: HTMLElement
   private revertDOM: HTMLElement | null = null
   private revertToA = false
+  private revertToLeft = false
   private renderRevert: (() => HTMLElement) | undefined
 
   /// The current set of changed chunks.
@@ -119,23 +123,27 @@ export class MergeView {
     this.dom.className = "cm-mergeView"
     this.editorDOM = this.dom.appendChild(document.createElement("div"))
     this.editorDOM.className = "cm-mergeViewEditors"
-    let wrapA = this.editorDOM.appendChild(document.createElement("div"))
+    let orientation = config.orientation || "a-b"
+    let wrapA = document.createElement("div")
     wrapA.className = "cm-mergeViewEditor"
+    let wrapB = document.createElement("div")
+    wrapB.className = "cm-mergeViewEditor"
+    this.editorDOM.appendChild(orientation == "a-b" ? wrapA : wrapB)
+    if (config.revertControls) {
+      this.revertDOM = this.editorDOM.appendChild(document.createElement("div"))
+      this.revertToA = config.revertControls == "b-to-a"
+      this.revertToLeft = this.revertToA == (orientation == "a-b")
+      this.renderRevert = config.renderRevertControl
+      this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
+      this.revertDOM.className = "cm-merge-revert"
+    }
+    this.editorDOM.appendChild(orientation == "a-b" ? wrapB : wrapA)
     this.a = new EditorView({
       state: stateA,
       parent: wrapA,
       root: config.root,
       dispatch: tr => this.dispatch(tr, this.a)
     })
-    if (config.revertControls) {
-      this.revertDOM = this.editorDOM.appendChild(document.createElement("div"))
-      this.revertToA = config.revertControls == "b-to-a"
-      this.renderRevert = config.renderRevertControl
-      this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
-      this.revertDOM.className = "cm-merge-revert"
-    }
-    let wrapB = this.editorDOM.appendChild(document.createElement("div"))
-    wrapB.className = "cm-mergeViewEditor"
     this.b = new EditorView({
       state: stateB,
       parent: wrapB,
@@ -202,7 +210,7 @@ export class MergeView {
       let text = this.a.state.phrase("Revert this chunk")
       elt.setAttribute("aria-label", text)
       elt.setAttribute("title", text)
-      elt.textContent = this.revertToA ? "⇜" : "⇝"
+      elt.textContent = this.revertToLeft ? "⇜" : "⇝"
     }
     elt.style.top = top
     elt.setAttribute("data-chunk", String(chunk))
@@ -250,4 +258,3 @@ export function getChunks(state: EditorState) {
   if (!field) return null
   return {chunks: field, side: state.facet(mergeConfig).side}
 }
-
