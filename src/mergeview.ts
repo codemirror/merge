@@ -1,6 +1,6 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec} from "@codemirror/state"
-import {Chunk, getChunks, updateChunksA, updateChunksB, setChunks, ChunkField} from "./chunk"
+import {Chunk, buildChunks, updateChunksA, updateChunksB, setChunks, ChunkField} from "./chunk"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
         mergeConfig, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
@@ -55,7 +55,8 @@ export class MergeView {
   private revertToA = false
   private renderRevert: (() => HTMLElement) | undefined
 
-  private chunks: readonly Chunk[]
+  /// The current set of changed chunks.
+  chunks: readonly Chunk[]
 
   private measuring = -1
 
@@ -104,7 +105,7 @@ export class MergeView {
         sharedExtensions
       ]
     })
-    this.chunks = getChunks(stateA.doc, stateB.doc)
+    this.chunks = buildChunks(stateA.doc, stateB.doc)
     let addA = [ChunkField.init(() => this.chunks)], addB = addA.slice()
     if (config.collapseUnchanged) {
       let {margin = 3, minSize = 4} = config.collapseUnchanged
@@ -240,3 +241,13 @@ function rm(elt: HTMLElement) {
   elt.remove()
   return next as HTMLElement | null
 }
+
+/// Get the changed chunks for the merge view that this editor is part
+/// of, plus the side it is on. Or null if the editor isn't part of a
+/// merge view or the merge view hasn't finished initializing yet.
+export function getChunks(state: EditorState) {
+  let field = state.field(ChunkField, false)
+  if (!field) return null
+  return {chunks: field, side: state.facet(mergeConfig).side}
+}
+

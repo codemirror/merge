@@ -1,21 +1,44 @@
 import {Transaction, Text, ChangeSet, StateField, StateEffect} from "@codemirror/state"
-import {Changes, presentableDiff} from "./diff"
+import {Change, presentableDiff} from "./diff"
 
-// A chunk holds either a range of lines which have changed content in
-// them. `toA`/`toB` points one after the chunk end for non-empty
-// chunks, and may point *after* the end of the document.
+/// A chunk describes a range of lines which have changed content in
+/// them. Either side (a/b) may either be empty (when its `to` is
+/// equal to its `from`), or points at a range starting at the start
+/// of the first changed line, to 1 past the end of the last changed
+/// line. Note that `to` positions may point past the end of the
+/// document. Use `endA`/`endB` if you need an end position that is
+/// certain to be a valid document position.
 export class Chunk {
   constructor(
-    readonly changes: Changes,
-    readonly fromA: number, readonly toA: number,
-    readonly fromB: number, readonly toB: number,
+    /// The individual changes inside this chunk. These are stored
+    /// relative to the start of the chunk, so you have to add
+    /// `chunk.fromA`/`fromB` to get document positions.
+    readonly changes: readonly Change[],
+    /// The start of the chunk in document A.
+    readonly fromA: number,
+    /// The end of the chunk in document A. This is equal to `fromA`
+    /// when the chunk covers no lines in document A, or is one unit
+    /// past the end of the last line in the chunk if it does.
+    readonly toA: number,
+    /// The start of the chunk in document B.
+    readonly fromB: number,
+    /// The end of the chunk in document A.
+    readonly toB: number,
   ) {}
 
+  /// @internal
   offset(offA: number, offB: number) {
     return offA || offB
       ? new Chunk(this.changes, this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB)
       : this
   }
+
+  /// Returns `fromA` if the chunk is empty in A, or the end of the
+  /// last line in the chunk otherwise.
+  get endA() { return Math.max(this.fromA, this.toA - 1) }
+  /// Returns `fromB` if the chunk is empty in B, or the end of the
+  /// last line in the chunk otherwise.
+  get endB() { return Math.max(this.fromB, this.toB - 1) }
 }
 
 function fromLine(fromA: number, fromB: number, a: Text, b: Text) {
@@ -29,7 +52,7 @@ function toLine(toA: number, toB: number, a: Text, b: Text) {
   return lineA.from == toA && lineB.from == toB ? [toA, toB] : [lineA.to + 1, lineB.to + 1]
 }
 
-function toChunks(changes: Changes, a: Text, b: Text, offA: number, offB: number) {
+function toChunks(changes: readonly Change[], a: Text, b: Text, offA: number, offB: number) {
   let chunks = []
   for (let i = 0; i < changes.length; i++) {
     let change = changes[i]
@@ -49,7 +72,7 @@ function toChunks(changes: Changes, a: Text, b: Text, offA: number, offB: number
   return chunks
 }
 
-export function getChunks(a: Text, b: Text): readonly Chunk[] {
+export function buildChunks(a: Text, b: Text): readonly Chunk[] {
   return toChunks(presentableDiff(a.toString(), b.toString()), a, b, 0, 0)
 }
 

@@ -1,6 +1,6 @@
 import {Text, EditorState} from "@codemirror/state"
 import {__test} from "@codemirror/merge"
-const {getChunks, updateChunksA, updateChunksB} = __test
+const {buildChunks, updateChunksA, updateChunksB} = __test
 import ist from "ist"
 
 function byJSON(a: any, b: any) { return JSON.stringify(a) == JSON.stringify(b) }
@@ -14,7 +14,7 @@ let docA = Text.of(linesA), docB = Text.of(linesB)
 
 describe("chunks", () => {
   it("enumerates changed chunks", () => {
-    let chunks = getChunks(docA, docB)
+    let chunks = buildChunks(docA, docB)
     ist(chunks.length, 2)
 
     let [ch1, ch2] = chunks
@@ -32,7 +32,7 @@ describe("chunks", () => {
 
   it("can update chunks for changes", () => {
     let stateA = EditorState.create({doc: docA}), stateB = EditorState.create({doc: docB})
-    let chunks = getChunks(stateA.doc, stateB.doc)
+    let chunks = buildChunks(stateA.doc, stateB.doc)
 
     let tr1 = stateA.update({changes: {from: 0, insert: "line NULL\n"}})
     let chunks1 = updateChunksA(chunks, tr1, stateB.doc)
@@ -57,7 +57,7 @@ describe("chunks", () => {
 
   it("can handle deleting updates", () => {
     let stateA = EditorState.create({doc: docA})
-    let chunks = getChunks(stateA.doc, docB)
+    let chunks = buildChunks(stateA.doc, docB)
 
     let tr = stateA.update({changes: {from: 0, to: 100}})
     let chunks1 = updateChunksA(chunks, tr, docB)

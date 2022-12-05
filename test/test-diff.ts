@@ -1,7 +1,7 @@
-import {diff, presentableDiff, Changes} from "@codemirror/merge"
+import {diff, presentableDiff, Change} from "@codemirror/merge"
 import ist from "ist"
 
-function apply(diff: Changes, orig: string, changed: string) {
+function apply(diff: readonly Change[], orig: string, changed: string) {
   let pos = 0, result = ""
   for (let ch of diff) {
     result += orig.slice(pos, ch.fromA)
@@ -12,7 +12,7 @@ function apply(diff: Changes, orig: string, changed: string) {
   return result
 }
 
-function checkShape(diff: Changes, shape: string) {
+function checkShape(diff: readonly Change[], shape: string) {
   let posA = 0, posB = 0, changes = []
   for (let part of shape.split(" ")) {
     let ch = /(\d+)\/(\d+)/.exec(part)
@@ -95,7 +95,7 @@ function parseDiff(d: string) {
           b: d.replace(change, (_, _a, b) => b)}
 }
 
-function serializeDiff(diff: Changes, a: string, b: string) {
+function serializeDiff(diff: readonly Change[], a: string, b: string) {
   let posA = 0, result = ""
   for (let ch of diff) {
     result += a.slice(posA, ch.fromA) + "[" + a.slice(ch.fromA, ch.toA) + "/" + b.slice(ch.fromB, ch.toB) + "]"

@@ -1,18 +1,28 @@
 // This algorithm was heavily inspired by Neil Fraser's
 // diff-match-patch library. See https://github.com/google/diff-match-patch/
 
+/// A changed range.
 export class Change {
-  constructor(readonly fromA: number, readonly toA: number,
-              readonly fromB: number, readonly toB: number) {}
+  constructor(
+    /// The start of the change in document A.
+    readonly fromA: number,
+    /// The end of the change in document A. This is equal to `fromA`
+    /// in case of insertions.
+    readonly toA: number,
+    /// The start of the change in document B.
+    readonly fromB: number,
+    /// The end of the change in document B. This is equal to `fromB`
+    /// for deletions.
+    readonly toB: number
+  ) {}
 
+  /// @internal
   offset(offA: number, offB: number) {
     return new Change(this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB)
   }
 }
 
-export type Changes = Change[]
-
-function findDiff(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Changes {
+function findDiff(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Change[] {
   if (a == b) return []
 
   // Remove identical prefix and suffix
@@ -59,7 +69,7 @@ function findDiff(a: string, fromA: number, toA: number, b: string, fromB: numbe
 }
 
 // Implementation of Myers 1986 "An O(ND) Difference Algorithm and Its Variations"
-function findSnake(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Changes {
+function findSnake(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Change[] {
   let lenA = toA - fromA, lenB = toB - fromB
   let off = Math.ceil((lenA + lenB) / 2)
   frontier1.reset(off)
@@ -218,7 +228,7 @@ function halfMatch(
   return match1 && (!match2 || match2[2] < match1[2]) ? match1 : match2
 }
 
-function mergeAdjacent(changes: Changes, minGap: number) {
+function mergeAdjacent(changes: Change[], minGap: number) {
   for (let i = 1; i < changes.length; i++) {
     let prev = changes[i - 1], cur = changes[i]
     if (prev.toA > cur.fromA - minGap && prev.toB > cur.fromB - minGap) {
@@ -229,7 +239,7 @@ function mergeAdjacent(changes: Changes, minGap: number) {
 }
 
 // Reorder and merge changes
-function normalize(a: string, b: string, changes: Changes) {
+function normalize(a: string, b: string, changes: Change[]) {
   for (;;) {
     mergeAdjacent(changes, 1)
     let moved = false
@@ -268,7 +278,7 @@ function normalize(a: string, b: string, changes: Changes) {
 }
 
 // Process a change set to make it suitable for presenting to users.
-function makePresentable(changes: Changes, a: string, b: string) {
+function makePresentable(changes: Change[], a: string, b: string) {
   for (let posA = 0, i = 0; i < changes.length; i++) {
     let change = changes[i]
     let lenA = change.toA - change.fromA, lenB = change.toB - change.fromB
@@ -382,10 +392,15 @@ function validIndex(s: string, index: number) {
   return !index || index == s.length || !isSurrogate1(s.charCodeAt(index - 1)) || !isSurrogate2(s.charCodeAt(index))
 }
 
-export function diff(a: string, b: string) {
+/// Compute the difference between two strings.
+export function diff(a: string, b: string): readonly Change[] {
   return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
 }
 
-export function presentableDiff(a: string, b: string) {
-  return makePresentable(diff(a, b), a, b)
+/// Compute the difference between the given strings, and clean up the
+/// resulting diff for presentation to users by dropping short
+/// unchanged ranges, and aligning changes to word boundaries when
+/// appropriate.
+export function presentableDiff(a: string, b: string): readonly Change[] {
+  return makePresentable(diff(a, b) as Change[], a, b)
 }
