@@ -1,3 +1,6 @@
+@MergeConfig
+
+@DirectMergeConfig
 
 @MergeView
 

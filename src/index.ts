@@ -1,6 +1,6 @@
 export {Change, diff, presentableDiff} from "./diff"
 
-export {MergeView, getChunks} from "./mergeview"
+export {MergeConfig, DirectMergeConfig, MergeView, getChunks} from "./mergeview"
 
 export {Chunk} from "./chunk"
 

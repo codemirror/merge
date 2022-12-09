@@ -1,6 +1,6 @@
 import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate,
         WidgetType, GutterMarker, gutter} from "@codemirror/view"
-import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Facet} from "@codemirror/state"
+import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Facet, Prec} from "@codemirror/state"
 import {Chunk, ChunkField} from "./chunk"
 
 type Config = {
@@ -23,21 +23,26 @@ export const decorateChunks = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged || chunksChanged(update.startState, update.state))
+    if (update.docChanged || update.viewportChanged || chunksChanged(update.startState, update.state) ||
+        configChanged(update.startState, update.state))
       ({deco: this.deco, gutter: this.gutter} = getChunkDeco(update.view))
   }
 }, {
   decorations: d => d.deco
 })
 
-export const changeGutter = gutter({
+export const changeGutter = Prec.low(gutter({
   class: "cm-changeGutter",
   markers: view => view.plugin(decorateChunks)?.gutter || RangeSet.empty,
   renderEmptyElements: false
-})
+}))
 
 function chunksChanged(s1: EditorState, s2: EditorState) {
   return s1.field(ChunkField, false) != s2.field(ChunkField, false)
+}
+
+function configChanged(s1: EditorState, s2: EditorState) {
+  return s1.facet(mergeConfig) != s2.facet(mergeConfig)
 }
 
 const changedLine = Decoration.line({class: "cm-changedLine"})
@@ -252,12 +257,13 @@ const CollapsedRanges = StateField.define<DecorationSet>({
   provide: f => EditorView.decorations.from(f)
 })
 
-export function collapseUnchanged(margin: number, minLines: number, isA: boolean) {
-  return CollapsedRanges.init(state => buildCollapsedRanges(state, margin, minLines, isA))
+export function collapseUnchanged({margin = 3, minSize = 4}: {margin?: number, minSize?: number}) {
+  return CollapsedRanges.init(state => buildCollapsedRanges(state, margin, minSize))
 }
 
-function buildCollapsedRanges(state: EditorState, margin: number, minLines: number, isA: boolean) {
+function buildCollapsedRanges(state: EditorState, margin: number, minLines: number) {
   let builder = new RangeSetBuilder<Decoration>()
+  let isA = state.facet(mergeConfig).side == "a"
   let chunks = state.field(ChunkField)
   let prevLine = 1
   for (let i = 0;; i++) {

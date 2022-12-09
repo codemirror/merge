@@ -1,22 +1,13 @@
 import {EditorView} from "@codemirror/view"
-import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec} from "@codemirror/state"
+import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment} from "@codemirror/state"
 import {Chunk, buildChunks, updateChunksA, updateChunksB, setChunks, ChunkField} from "./chunk"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
         mergeConfig, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
-type MergeConfig = {
-  /// Configuration for the first editor (the left one in a
-  /// left-to-right context).
-  a: EditorStateConfig
-  /// Configuration for the second editor.
-  b: EditorStateConfig
-  /// Parent element to append the view to.
-  parent?: Element | DocumentFragment
-  /// An optional root. Only necessary if the view is mounted in a
-  /// shadow root or a document other than the global `document`
-  /// object.
-  root?: Document | ShadowRoot
+/// Configuration options to `MergeView` that can be provided both
+/// initially and to [`reconfigure`](#merge.MergeView.reconfigure).
+export interface MergeConfig {
   /// Controls whether editor A or editor B is shown first. Defaults
   /// to `"a-b"`.
   orientation?: "a-b" | "b-a",
@@ -37,6 +28,24 @@ type MergeConfig = {
   /// of collapsible lines that need to be present (defaults to 4).
   collapseUnchanged?: {margin?: number, minSize?: number}
 }
+
+/// Configuration options given to the [`MergeView`](#merge.MergeView)
+/// constructor.
+export interface DirectMergeConfig extends MergeConfig {
+  /// Configuration for the first editor (the left one in a
+  /// left-to-right context).
+  a: EditorStateConfig
+  /// Configuration for the second editor.
+  b: EditorStateConfig
+  /// Parent element to append the view to.
+  parent?: Element | DocumentFragment
+  /// An optional root. Only necessary if the view is mounted in a
+  /// shadow root or a document other than the global `document`
+  /// object.
+  root?: Document | ShadowRoot
+}
+
+const collapseCompartment = new Compartment, configCompartment = new Compartment
 
 /// A merge view manages two editors side-by-side, highlighting the
 /// difference between them and vertically aligning unchanged lines.
@@ -65,10 +74,9 @@ export class MergeView {
   private measuring = -1
 
   /// Create a new merge view.
-  constructor(config: MergeConfig) {
+  constructor(config: DirectMergeConfig) {
     let sharedExtensions = [
       Prec.low(decorateChunks),
-      config.gutter !== false ? Prec.low(changeGutter) : [],
       baseTheme,
       externalTheme,
       Spacers,
@@ -79,45 +87,48 @@ export class MergeView {
       }),
     ]
 
+    let configA = [mergeConfig.of({
+      side: "a",
+      sibling: () => this.b,
+      highlightChanges: config.highlightChanges !== false,
+      markGutter: config.gutter !== false
+    })]
+    if (config.gutter !== false) configA.push(changeGutter)
     let stateA = EditorState.create({
       doc: config.a.doc,
       selection: config.a.selection,
       extensions: [
         config.a.extensions || [],
         EditorView.editorAttributes.of({class: "cm-merge-a"}),
-        mergeConfig.of({
-          side: "a",
-          sibling: () => this.b,
-          highlightChanges: config.highlightChanges !== false,
-          markGutter: config.gutter !== false
-        }),
+        configCompartment.of(configA),
         sharedExtensions
       ]
     })
+
+    let configB = [mergeConfig.of({
+      side: "b",
+      sibling: () => this.a,
+      highlightChanges: config.highlightChanges !== false,
+      markGutter: config.gutter !== false
+    })]
+    if (config.gutter !== false) configB.push(changeGutter)
     let stateB = EditorState.create({
       doc: config.b.doc,
       selection: config.b.selection,
       extensions: [
         config.b.extensions || [],
         EditorView.editorAttributes.of({class: "cm-merge-b"}),
-        mergeConfig.of({
-          side: "b",
-          sibling: () => this.a,
-          highlightChanges: config.highlightChanges !== false,
-          markGutter: config.gutter !== false
-        }),
+        configCompartment.of(configB),
         sharedExtensions
       ]
     })
     this.chunks = buildChunks(stateA.doc, stateB.doc)
-    let addA = [ChunkField.init(() => this.chunks)], addB = addA.slice()
-    if (config.collapseUnchanged) {
-      let {margin = 3, minSize = 4} = config.collapseUnchanged
-      addA.push(collapseUnchanged(margin, minSize, true))
-      addB.push(collapseUnchanged(margin, minSize, false))
-    }
-    stateA = stateA.update({effects: StateEffect.appendConfig.of(addA)}).state
-    stateB = stateB.update({effects: StateEffect.appendConfig.of(addB)}).state
+    let add = [
+      ChunkField.init(() => this.chunks),
+      collapseCompartment.of(config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [])
+    ]
+    stateA = stateA.update({effects: StateEffect.appendConfig.of(add)}).state
+    stateB = stateB.update({effects: StateEffect.appendConfig.of(add)}).state
 
     this.dom = document.createElement("div")
     this.dom.className = "cm-mergeView"
@@ -129,14 +140,6 @@ export class MergeView {
     let wrapB = document.createElement("div")
     wrapB.className = "cm-mergeViewEditor"
     this.editorDOM.appendChild(orientation == "a-b" ? wrapA : wrapB)
-    if (config.revertControls) {
-      this.revertDOM = this.editorDOM.appendChild(document.createElement("div"))
-      this.revertToA = config.revertControls == "b-to-a"
-      this.revertToLeft = this.revertToA == (orientation == "a-b")
-      this.renderRevert = config.renderRevertControl
-      this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
-      this.revertDOM.className = "cm-merge-revert"
-    }
     this.editorDOM.appendChild(orientation == "a-b" ? wrapB : wrapA)
     this.a = new EditorView({
       state: stateA,
@@ -150,6 +153,7 @@ export class MergeView {
       root: config.root,
       dispatch: tr => this.dispatch(tr, this.b)
     })
+    this.setupRevertControls(!!config.revertControls, config.revertControls == "b-to-a", config.renderRevertControl)
     if (config.parent) config.parent.appendChild(this.dom)
     this.scheduleMeasure()
   }
@@ -164,6 +168,73 @@ export class MergeView {
       this.scheduleMeasure()
     } else {
       target.update([tr])
+    }
+  }
+
+  /// Reconfigure an existing merge view.
+  reconfigure(config: MergeConfig) {
+    if ("orientation" in config) {
+      let aB = config.orientation != "b-a"
+      if (aB != (this.editorDOM.firstChild == this.a.dom.parentNode)) {
+        let domA = this.a.dom.parentNode as HTMLElement, domB = this.b.dom.parentNode as HTMLElement
+        domA.remove()
+        domB.remove()
+        this.editorDOM.insertBefore(aB ? domA : domB, this.editorDOM.firstChild)
+        this.editorDOM.appendChild(aB ? domB : domA)
+        this.revertToLeft = !this.revertToLeft
+        if (this.revertDOM) this.revertDOM.textContent = ""
+      }
+    }
+    if ("revertControls" in config || "renderRevertControl" in config) {
+      let controls = !!this.revertDOM, toA = this.revertToA, render = this.renderRevert
+      if ("revertControls" in config) {
+        controls = !!config.revertControls
+        toA = config.revertControls == "b-to-a"
+      }
+      if ("renderRevertControl" in config) render = config.renderRevertControl
+      this.setupRevertControls(controls, toA, render)
+    }
+    let highlight = "highlightChanges" in config, gutter = "gutter" in config, collapse = "collapseUnchanged" in config
+    if (highlight || gutter || collapse) {
+      let effectsA: StateEffect<unknown>[] = [], effectsB: StateEffect<unknown>[] = []
+      if (highlight || gutter) {
+        let currentConfig = this.a.state.facet(mergeConfig)
+        let markGutter = gutter ? config.gutter !== false : currentConfig.markGutter
+        let highlightChanges = highlight ? config.highlightChanges !== false : currentConfig.highlightChanges
+        effectsA.push(configCompartment.reconfigure([
+          mergeConfig.of({side: "a", sibling: () => this.b, highlightChanges, markGutter}),
+          markGutter ? changeGutter : []
+        ]))
+        effectsB.push(configCompartment.reconfigure([
+          mergeConfig.of({side: "b", sibling: () => this.a, highlightChanges, markGutter}),
+          markGutter ? changeGutter : []
+        ]))
+      }
+      if (collapse) {
+        let effect = collapseCompartment.reconfigure(
+          config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [])
+        effectsA.push(effect)
+        effectsB.push(effect)
+      }
+      this.a.dispatch({effects: effectsA})
+      this.b.dispatch({effects: effectsB})
+    }
+    this.scheduleMeasure()
+  }
+
+  private setupRevertControls(controls: boolean, toA: boolean, render: (() => HTMLElement) | undefined) {
+    this.revertToA = toA
+    this.revertToLeft = this.revertToA == (this.editorDOM.firstChild == this.a.dom.parentNode)
+    this.renderRevert = render
+    if (!controls && this.revertDOM) {
+      this.revertDOM.remove()
+      this.revertDOM = null
+    } else if (controls && !this.revertDOM) {
+      this.revertDOM = this.editorDOM.insertBefore(document.createElement("div"), this.editorDOM.firstChild!.nextSibling)
+      this.revertDOM.addEventListener("mousedown", e => this.revertClicked(e))
+      this.revertDOM.className = "cm-merge-revert"
+    } else if (this.revertDOM) {
+      this.revertDOM.textContent = ""
     }
   }
 
