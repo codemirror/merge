@@ -1,3 +1,9 @@
+## 0.1.3 (2022-12-09)
+
+### New features
+
+It is now possible to change the configuration of a merge view with its `reconfigure` method.
+
 ## 0.1.2 (2022-12-05)
 
 ### New features
