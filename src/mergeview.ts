@@ -296,7 +296,7 @@ export class MergeView {
         ? [this.b, this.a, chunk.fromB, chunk.toB, chunk.fromA, chunk.toA]
         : [this.a, this.b, chunk.fromA, chunk.toA, chunk.fromB, chunk.toB]
       let insert = source.state.sliceDoc(srcFrom, Math.max(srcFrom, srcTo - 1))
-      if (srcFrom != srcTo) insert += source.state.lineBreak
+      if (srcFrom != srcTo && destTo <= dest.state.doc.length) insert += source.state.lineBreak
       dest.dispatch({
         changes: {from: destFrom, to: Math.min(dest.state.doc.length, destTo), insert},
         userEvent: "revert"
