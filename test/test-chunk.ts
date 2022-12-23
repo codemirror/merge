@@ -30,6 +30,12 @@ describe("chunks", () => {
     ist([c2.toA, c2.fromB, c2.toB], [docA.line(749).to - ch2.fromA, 13, 15], byJSON)
   })
 
+  it("handles changes at end of document", () => {
+    let [ch1] = buildChunks(Text.of(["one", ""]), Text.of(["one", "", ""]))
+    ist([ch1.fromA, ch1.toA], [4, 4], byJSON)
+    ist([ch1.fromB, ch1.toB], [4, 5], byJSON)
+  })
+
   it("can update chunks for changes", () => {
     let stateA = EditorState.create({doc: docA}), stateB = EditorState.create({doc: docB})
     let chunks = buildChunks(stateA.doc, stateB.doc)
@@ -51,8 +57,8 @@ describe("chunks", () => {
     let [, , ch3, , ch5] = chunks2
     ist([ch3.fromA, ch3.toA], [stateA.doc.line(601).from, stateA.doc.line(602).from], byJSON)
     ist([ch3.fromB, ch3.toB], [tr2.newDoc.line(600).from, tr2.newDoc.line(601).from], byJSON)
-    ist([ch5.fromA, ch5.toA], [stateA.doc.length, stateA.doc.length + 1], byJSON)
-    ist([ch5.fromB, ch5.toB], [tr2.newDoc.length - 3, tr2.newDoc.length + 1], byJSON)
+    ist([ch5.fromA, ch5.toA], [stateA.doc.length - 9, stateA.doc.length + 1], byJSON)
+    ist([ch5.fromB, ch5.toB], [tr2.newDoc.length - 13, tr2.newDoc.length + 1], byJSON)
   })
 
   it("can handle deleting updates", () => {

@@ -43,8 +43,8 @@ export class Chunk {
 
 function fromLine(fromA: number, fromB: number, a: Text, b: Text) {
   let lineA = a.lineAt(fromA), lineB = b.lineAt(fromB)
-  return lineA.to == fromA && lineB.to == fromB
-    ? [Math.min(a.length, fromA + 1), Math.min(b.length, fromB + 1)] : [lineA.from, lineB.from]
+  return lineA.to == fromA && lineB.to == fromB && fromA < a.length && fromB < b.length
+    ? [fromA + 1, fromB + 1] : [lineA.from, lineB.from]
 }
 
 function toLine(toA: number, toB: number, a: Text, b: Text) {
