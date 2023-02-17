@@ -1,3 +1,11 @@
+## 0.1.4 (2023-02-17)
+
+### Bug fixes
+
+Fix a bug that caused an extra stray newline to be inserted when pressing the merge button for a change at the end of the document.
+
+Avoid generating incorrect chunks for insertions or deletions at the end of the document.
+
 ## 0.1.3 (2022-12-09)
 
 ### New features
