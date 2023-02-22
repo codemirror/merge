@@ -1,4 +1,4 @@
-import {Transaction, Text, ChangeSet, StateField, StateEffect} from "@codemirror/state"
+import {Text, ChangeDesc, StateField, StateEffect} from "@codemirror/state"
 import {Change, presentableDiff} from "./diff"
 
 /// A chunk describes a range of lines which have changed content in
@@ -39,6 +39,22 @@ export class Chunk {
   /// Returns `fromB` if the chunk is empty in B, or the end of the
   /// last line in the chunk otherwise.
   get endB() { return Math.max(this.fromB, this.toB - 1) }
+
+  /// Build a set of changed chunks for the given documents.
+  static build(a: Text, b: Text): readonly Chunk[] {
+    return toChunks(presentableDiff(a.toString(), b.toString()), a, b, 0, 0)
+  }
+
+  /// Update a set of chunks for changes in document A. `a` should
+  /// hold the updated document A.
+  static updateA(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc) {
+    return updateChunks(findRangesForChange(chunks, changes, true, b.length), chunks, a, b)
+  }
+
+  /// Update a set of chunks for changes in document B.
+  static updateB(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc) {
+    return updateChunks(findRangesForChange(chunks, changes, false, a.length), chunks, a, b)
+  }
 }
 
 function fromLine(fromA: number, fromB: number, a: Text, b: Text) {
@@ -72,10 +88,6 @@ function toChunks(changes: readonly Change[], a: Text, b: Text, offA: number, of
   return chunks
 }
 
-export function buildChunks(a: Text, b: Text): readonly Chunk[] {
-  return toChunks(presentableDiff(a.toString(), b.toString()), a, b, 0, 0)
-}
-
 const updateMargin = 1000
 
 type UpdateRange = {fromA: number, toA: number, fromB: number, toB: number, diffA: number, diffB: number}
@@ -102,7 +114,7 @@ function findPos(
   }
 }
 
-function findRangesForChange(chunks: readonly Chunk[], changes: ChangeSet, isA: boolean, otherLen: number) {
+function findRangesForChange(chunks: readonly Chunk[], changes: ChangeDesc, isA: boolean, otherLen: number) {
   let ranges: UpdateRange[] = []
   changes.iterChangedRanges((cFromA, cToA, cFromB, cToB) => {
     let fromA = 0, toA = isA ? changes.length : otherLen
@@ -144,16 +156,6 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
   while (chunkI < chunks.length)
     result.push(chunks[chunkI++].offset(offA, offB))
   return result
-}
-
-/// @internal
-export function updateChunksA(chunks: readonly Chunk[], transaction: Transaction, b: Text) {
-  return updateChunks(findRangesForChange(chunks, transaction.changes, true, b.length), chunks, transaction.newDoc, b)
-}
-
-/// @internal
-export function updateChunksB(chunks: readonly Chunk[], transaction: Transaction, a: Text) {
-  return updateChunks(findRangesForChange(chunks, transaction.changes, false, a.length), chunks, a, transaction.newDoc)
 }
 
 export const setChunks = StateEffect.define<readonly Chunk[]>()

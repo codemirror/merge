@@ -1,6 +1,5 @@
 import {Text, EditorState} from "@codemirror/state"
-import {__test} from "@codemirror/merge"
-const {buildChunks, updateChunksA, updateChunksB} = __test
+import {Chunk} from "@codemirror/merge"
 import ist from "ist"
 
 function byJSON(a: any, b: any) { return JSON.stringify(a) == JSON.stringify(b) }
@@ -14,7 +13,7 @@ let docA = Text.of(linesA), docB = Text.of(linesB)
 
 describe("chunks", () => {
   it("enumerates changed chunks", () => {
-    let chunks = buildChunks(docA, docB)
+    let chunks = Chunk.build(docA, docB)
     ist(chunks.length, 2)
 
     let [ch1, ch2] = chunks
@@ -31,17 +30,17 @@ describe("chunks", () => {
   })
 
   it("handles changes at end of document", () => {
-    let [ch1] = buildChunks(Text.of(["one", ""]), Text.of(["one", "", ""]))
+    let [ch1] = Chunk.build(Text.of(["one", ""]), Text.of(["one", "", ""]))
     ist([ch1.fromA, ch1.toA], [4, 4], byJSON)
     ist([ch1.fromB, ch1.toB], [4, 5], byJSON)
   })
 
   it("can update chunks for changes", () => {
     let stateA = EditorState.create({doc: docA}), stateB = EditorState.create({doc: docB})
-    let chunks = buildChunks(stateA.doc, stateB.doc)
+    let chunks = Chunk.build(stateA.doc, stateB.doc)
 
     let tr1 = stateA.update({changes: {from: 0, insert: "line NULL\n"}})
-    let chunks1 = updateChunksA(chunks, tr1, stateB.doc)
+    let chunks1 = Chunk.updateA(chunks, tr1.newDoc, stateB.doc, tr1.changes)
     ist(chunks1.length, 3)
     let [ch1, ch2] = chunks1
     ist([ch1.fromA, ch1.toA, ch1.fromB, ch1.toB], [0, 10, 0, 0], byJSON)
@@ -52,7 +51,7 @@ describe("chunks", () => {
       {from: stateB.doc.line(600).from + 1, insert: "---"},
       {from: stateB.doc.length, insert: "\n???"}
     ]})
-    let chunks2 = updateChunksB(chunks1, tr2, stateA.doc)
+    let chunks2 = Chunk.updateB(chunks1, stateA.doc, tr2.newDoc, tr2.changes)
     ist(chunks2.length, 5)
     let [, , ch3, , ch5] = chunks2
     ist([ch3.fromA, ch3.toA], [stateA.doc.line(601).from, stateA.doc.line(602).from], byJSON)
@@ -63,10 +62,10 @@ describe("chunks", () => {
 
   it("can handle deleting updates", () => {
     let stateA = EditorState.create({doc: docA})
-    let chunks = buildChunks(stateA.doc, docB)
+    let chunks = Chunk.build(stateA.doc, docB)
 
     let tr = stateA.update({changes: {from: 0, to: 100}})
-    let chunks1 = updateChunksA(chunks, tr, docB)
+    let chunks1 = Chunk.updateA(chunks, tr.newDoc, docB, tr.changes)
     ist(chunks1.length, 3)
     ist(chunks1.map(c => c.fromA), [0, 4283, 6083], byJSON)
     ist(chunks1.map(c => c.fromB), [0, 4383, 6181], byJSON)

@@ -1,6 +1,6 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment} from "@codemirror/state"
-import {Chunk, buildChunks, updateChunksA, updateChunksB, setChunks, ChunkField} from "./chunk"
+import {Chunk, setChunks, ChunkField} from "./chunk"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
         mergeConfig, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
@@ -122,7 +122,7 @@ export class MergeView {
         sharedExtensions
       ]
     })
-    this.chunks = buildChunks(stateA.doc, stateB.doc)
+    this.chunks = Chunk.build(stateA.doc, stateB.doc)
     let add = [
       ChunkField.init(() => this.chunks),
       collapseCompartment.of(config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [])
@@ -160,8 +160,8 @@ export class MergeView {
 
   private dispatch(tr: Transaction, target: EditorView) {
     if (tr.docChanged) {
-      this.chunks = target == this.a ? updateChunksA(this.chunks, tr, this.b.state.doc)
-        : updateChunksB(this.chunks, tr, this.a.state.doc)
+      this.chunks = target == this.a ? Chunk.updateA(this.chunks, tr.newDoc, this.b.state.doc, tr.changes)
+        : Chunk.updateB(this.chunks, this.a.state.doc, tr.newDoc, tr.changes)
       target.update([tr, tr.state.update({effects: setChunks.of(this.chunks)})])
       let other = target == this.a ? this.b : this.a
       other.update([other.state.update({effects: setChunks.of(this.chunks)})])

@@ -165,6 +165,19 @@ last line in the chunk otherwise.</p>
 
 <dd><p>Returns <code>fromB</code> if the chunk is empty in B, or the end of the
 last line in the chunk otherwise.</p>
+</dd><dt id="user-content-chunk^build">
+  <code>static <strong><a href="#user-content-chunk^build">build</a></strong>(<a id="user-content-chunk^build^a" href="#user-content-chunk^build^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^build^b" href="#user-content-chunk^build^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+
+<dd><p>Build a set of changed chunks for the given documents.</p>
+</dd><dt id="user-content-chunk^updatea">
+  <code>static <strong><a href="#user-content-chunk^updatea">updateA</a></strong>(<a id="user-content-chunk^updatea^chunks" href="#user-content-chunk^updatea^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updatea^a" href="#user-content-chunk^updatea^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^b" href="#user-content-chunk^updatea^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^changes" href="#user-content-chunk^updatea^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+
+<dd><p>Update a set of chunks for changes in document A. <code>a</code> should
+hold the updated document A.</p>
+</dd><dt id="user-content-chunk^updateb">
+  <code>static <strong><a href="#user-content-chunk^updateb">updateB</a></strong>(<a id="user-content-chunk^updateb^chunks" href="#user-content-chunk^updateb^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updateb^a" href="#user-content-chunk^updateb^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^b" href="#user-content-chunk^updateb^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^changes" href="#user-content-chunk^updateb^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+
+<dd><p>Update a set of chunks for changes in document B.</p>
 </dd></dl>
 
 </dd>
