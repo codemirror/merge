@@ -1,3 +1,9 @@
+## 0.1.5 (2023-02-26)
+
+### New features
+
+`Chunk` now exposes static methods for building an updating sets of chunks directly.
+
 ## 0.1.4 (2023-02-17)
 
 ### Bug fixes
