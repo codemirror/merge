@@ -1,3 +1,9 @@
+## 0.1.6 (2023-02-28)
+
+### Bug fixes
+
+Fix a bug where changed chunks could be found in equal documents.
+
 ## 0.1.5 (2023-02-26)
 
 ### New features
