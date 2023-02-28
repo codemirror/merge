@@ -70,4 +70,11 @@ describe("chunks", () => {
     ist(chunks1.map(c => c.fromA), [0, 4283, 6083], byJSON)
     ist(chunks1.map(c => c.fromB), [0, 4383, 6181], byJSON)
   })
+
+  it("clears chunks when a is set to equal b", () => {
+    let sA = EditorState.create({doc: ""}), sB = EditorState.create({doc: "foo\n"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    let tr = sA.update({changes: {from: 0, insert: sB.doc}})
+    ist(Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes).length, 0)
+  })
 })

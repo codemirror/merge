@@ -144,7 +144,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
 
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (next.toA + offA <= fromA) result.push(next.offset(offA, offB))
+      if (next.toA + offA <= fromA && next.toB + offB <= fromB) result.push(next.offset(offA, offB))
       else if (next.fromA + offA > toA) break
       chunkI++
     }
