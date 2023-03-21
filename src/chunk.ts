@@ -1,6 +1,8 @@
 import {Text, ChangeDesc, StateField, StateEffect} from "@codemirror/state"
 import {Change, presentableDiff} from "./diff"
 
+const limit = {scanLimit: 500}
+
 /// A chunk describes a range of lines which have changed content in
 /// them. Either side (a/b) may either be empty (when its `to` is
 /// equal to its `from`), or points at a range starting at the start
@@ -42,7 +44,7 @@ export class Chunk {
 
   /// Build a set of changed chunks for the given documents.
   static build(a: Text, b: Text): readonly Chunk[] {
-    return toChunks(presentableDiff(a.toString(), b.toString()), a, b, 0, 0)
+    return toChunks(presentableDiff(a.toString(), b.toString(), limit), a, b, 0, 0)
   }
 
   /// Update a set of chunks for changes in document A. `a` should
@@ -148,7 +150,8 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
       else if (next.fromA + offA > toA) break
       chunkI++
     }
-    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB)), a, b, fromA, fromB))
+    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), limit),
+                               a, b, fromA, fromB))
       result.push(chunk)
     offA += range.diffA
     offB += range.diffB
