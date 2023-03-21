@@ -240,7 +240,6 @@ function halfMatch(
 function crudeMatch(
   a: string, fromA: number, toA: number, b: string, fromB: number, toB: number
 ): Change[] {
-  let t0 = Date.now()
   let lenA = toA - fromA, lenB = toB - fromB
   let result
   if (lenA < lenB) {
