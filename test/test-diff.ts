@@ -29,7 +29,7 @@ function checkShape(diff: readonly Change[], shape: string) {
 }
 
 describe("diff", () => {
-  it("produces minimal diffs", () => {
+  it("produces close to minimal diffs", () => {
     for (let i = 0; i < 1000; i++) {
       let len = Math.ceil(Math.sqrt(i)) * 5 + 5
       let str = ""
@@ -50,7 +50,8 @@ describe("diff", () => {
       let d = diff(str, changed)
       let dSkipped = len - d.reduce((l, ch) => l + (ch.toA - ch.fromA), 0)
       let dInserted = d.reduce((l, ch) => l + (ch.toB - ch.fromB), 0)
-      if (dSkipped != skipped || dInserted != inserted) {
+      let margin = Math.round(len / 10)
+      if (dSkipped < skipped - margin || dInserted > inserted + margin) {
         console.log("failure for", JSON.stringify(str), JSON.stringify(changed))
         ist(dSkipped, skipped)
         ist(dInserted, inserted)

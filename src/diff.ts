@@ -218,7 +218,7 @@ function halfMatch(
       let length = seed.length + prefixAfter + suffixBefore
       if (!best || best[2] < length) best = [seedFrom - suffixBefore, fromB + found - suffixBefore, length]
     }
-    return best && best[2] * 2 > lenA ? best : null
+    return best && best[2] * 2 >= lenA ? best : null
   }
 
   // Try to find a match around the second and third quarters of
