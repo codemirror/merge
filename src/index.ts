@@ -1,4 +1,4 @@
-export {Change, diff, presentableDiff} from "./diff"
+export {Change, diff, presentableDiff, DiffConfig} from "./diff"
 
 export {MergeConfig, DirectMergeConfig, MergeView, getChunks} from "./mergeview"
 

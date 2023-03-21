@@ -68,9 +68,12 @@ function findDiff(a: string, fromA: number, toA: number, b: string, fromB: numbe
   return findSnake(a, fromA, toA, b, fromB, toB)
 }
 
+let scanLimit = 1e9
+
 // Implementation of Myers 1986 "An O(ND) Difference Algorithm and Its Variations"
 function findSnake(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Change[] {
   let lenA = toA - fromA, lenB = toB - fromB
+  if (Math.min(lenA, lenB) > scanLimit * 16) return crudeMatch(a, fromA, toA, b, fromB, toB)
   let off = Math.ceil((lenA + lenB) / 2)
   frontier1.reset(off)
   frontier2.reset(off)
@@ -78,6 +81,7 @@ function findSnake(a: string, fromA: number, toA: number, b: string, fromB: numb
   let match2 = (x: number, y: number) => a.charCodeAt(toA - x - 1) == b.charCodeAt(toB - y - 1)
   let test1 = (lenA - lenB) % 2 != 0 ? frontier2 : null, test2 = test1 ? null : frontier1
   for (let depth = 0; depth < off; depth++) {
+    if (depth > scanLimit) return crudeMatch(a, fromA, toA, b, fromB, toB)
     let done = frontier1.advance(depth, lenA, lenB, off, test1, false, match1) ||
       frontier2.advance(depth, lenA, lenB, off, test2, true, match2)
     if (done) return bisect(a, fromA, toA, fromA + done[0], b, fromB, toB, fromB + done[1])
@@ -186,46 +190,69 @@ function commonSuffix(a: string, fromA: number, toA: number, b: string, fromB: n
   }
 }
 
+// a assumed to be be longer than b
+function findMatch(
+  a: string, fromA: number, toA: number, b: string, fromB: number, toB: number,
+  size: number, divideTo: number
+): [number, number, number] | null {
+  let rangeB = b.slice(fromB, toB)
+
+  // Try some substrings of A of length `size` and see if they exist
+  // in B.
+  let best: [number, number, number] | null = null
+  for (;;) {
+    for (let start = fromA + size;;) {
+      if (!validIndex(a, start)) start++
+      let end = start + size
+      if (end >= toA) break
+      if (!validIndex(a, end)) end--
+      let seed = a.slice(start, end)
+      let found = -1
+      while ((found = rangeB.indexOf(seed, found + 1)) != -1) {
+        let prefixAfter = commonPrefix(a, end, toA, b, fromB + found + seed.length, toB)
+        let suffixBefore = commonSuffix(a, fromA, start, b, fromB, fromB + found)
+        let length = seed.length + prefixAfter + suffixBefore
+        if (!best || best[2] < length) best = [start - suffixBefore, fromB + found - suffixBefore, length]
+      }
+      start = end
+    }
+    size = size >> 1
+    if (best || divideTo < 0 || size < divideTo) return best
+  }
+}
+
 // Find a shared substring that is at least half the length of the
 // longer range. Returns an array describing the substring [startA,
 // startB, len], or null.
 function halfMatch(
   a: string, fromA: number, toA: number, b: string, fromB: number, toB: number
-): [number, number, number] | null{
+): [number, number, number] | null {
   let lenA = toA - fromA, lenB = toB - fromB
   if (lenA < lenB) {
     let result = halfMatch(b, fromB, toB, a, fromA, toA)
     return result && [result[1], result[0], result[2]]
   }
   // From here a is known to be at least as long as b
-
   if (lenA < 4 || lenB * 2 < lenA) return null
+  return findMatch(a, fromA, toA, b, fromB, toB, Math.floor(lenA / 4), -1)
+}
 
-  let rangeB = b.slice(fromB, toB)
-  // Does a substring of `b` exist within `a` that is at least half
-  // the length of `a`?
-  function scanFrom(seedFrom: number): [number, number, number] | null {
-    // Look for a ¼ length substring
-    let seedTo = seedFrom + Math.floor(lenA / 4)
-    if (!validIndex(a, seedFrom)) seedFrom++
-    if (!validIndex(a, seedTo)) seedTo--
-    if (seedFrom >= seedTo) return null
-    let seed = a.slice(seedFrom, seedTo)
-    let found = -1, best: [number, number, number] | undefined
-    while ((found = rangeB.indexOf(seed, found + 1)) != -1) {
-      let prefixAfter = commonPrefix(a, seedTo, toA, b, fromB + found + seed.length, toB)
-      let suffixBefore = commonSuffix(a, fromA, seedFrom, b, fromB, fromB + found)
-      let length = seed.length + prefixAfter + suffixBefore
-      if (!best || best[2] < length) best = [seedFrom - suffixBefore, fromB + found - suffixBefore, length]
-    }
-    return best && best[2] * 2 >= lenA ? best : null
+function crudeMatch(
+  a: string, fromA: number, toA: number, b: string, fromB: number, toB: number
+): Change[] {
+  let t0 = Date.now()
+  let lenA = toA - fromA, lenB = toB - fromB
+  let result
+  if (lenA < lenB) {
+    let inv = findMatch(b, fromB, toB, a, fromA, toA, Math.floor(lenA / 6), 50)
+    result = inv && [inv[1], inv[0], inv[2]]
+  } else {
+    result = findMatch(a, fromA, toA, b, fromB, toB, Math.floor(lenB / 6), 50)
   }
-
-  // Try to find a match around the second and third quarters of
-  // string.
-  let match1 = scanFrom(fromA + Math.ceil(lenA / 4))
-  let match2 = scanFrom(fromA + Math.ceil(lenA / 2))
-  return match1 && (!match2 || match2[2] < match1[2]) ? match1 : match2
+  if (!result) return [new Change(fromA, toA, fromB, toB)]
+  let [sharedA, sharedB, sharedLen] = result
+  return findDiff(a, fromA, sharedA, b, fromB, sharedB)
+    .concat(findDiff(a, sharedA + sharedLen, toA, b, sharedB + sharedLen, toB))
 }
 
 function mergeAdjacent(changes: Change[], minGap: number) {
@@ -392,8 +419,19 @@ function validIndex(s: string, index: number) {
   return !index || index == s.length || !isSurrogate1(s.charCodeAt(index - 1)) || !isSurrogate2(s.charCodeAt(index))
 }
 
+/// Options passed to diffing functions.
+export interface DiffConfig {
+  /// When given, this limits the depth of full (expensive) diff
+  /// computations, causing them to give up and fall back to a faster
+  /// but less precise approach when there is more than this many
+  /// changed characters in a scanned range. This should help avoid
+  /// quadratic running time on large, very different inputs.
+  scanLimit?: number
+}
+
 /// Compute the difference between two strings.
-export function diff(a: string, b: string): readonly Change[] {
+export function diff(a: string, b: string, config?: DiffConfig): readonly Change[] {
+  scanLimit = (config?.scanLimit ?? 1e9) >> 1
   return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
 }
 
@@ -401,6 +439,6 @@ export function diff(a: string, b: string): readonly Change[] {
 /// resulting diff for presentation to users by dropping short
 /// unchanged ranges, and aligning changes to word boundaries when
 /// appropriate.
-export function presentableDiff(a: string, b: string): readonly Change[] {
-  return makePresentable(diff(a, b) as Change[], a, b)
+export function presentableDiff(a: string, b: string, config?: DiffConfig): readonly Change[] {
+  return makePresentable(diff(a, b, config) as Change[], a, b)
 }
