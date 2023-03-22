@@ -1,3 +1,13 @@
+## 6.0.0 (2023-03-22)
+
+### Bug fixes
+
+Improve performance of the merge view when the inputs are almost entirely different.
+
+### New features
+
+`diff` and `presentableDiff` now take an optional `scanLimit` option that can be used to trade speed for accuracy on very different inputs.
+
 ## 0.1.6 (2023-02-28)
 
 ### Bug fixes

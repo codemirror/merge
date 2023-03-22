@@ -1,6 +1,6 @@
 {
   "name": "@codemirror/merge",
-  "version": "0.1.6",
+  "version": "6.0.0",
   "description": "A diff/merge view for CodeMirror",
   "scripts": {
     "test": "cm-runtests",
