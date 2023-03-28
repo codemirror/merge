@@ -1,3 +1,9 @@
+## 6.0.1 (2023-03-28)
+
+### Bug fixes
+
+Fix a bug that would cause diffing to loop infinitely with some inputs.
+
 ## 6.0.0 (2023-03-22)
 
 ### Bug fixes
