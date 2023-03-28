@@ -201,6 +201,7 @@ function findMatch(
   // in B.
   let best: [number, number, number] | null = null
   for (;;) {
+    if (best || size < divideTo) return best
     for (let start = fromA + size;;) {
       if (!validIndex(a, start)) start++
       let end = start + size
@@ -216,8 +217,8 @@ function findMatch(
       }
       start = end
     }
+    if (divideTo < 0) return best
     size = size >> 1
-    if (best || divideTo < 0 || size < divideTo) return best
   }
 }
 
