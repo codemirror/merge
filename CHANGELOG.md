@@ -1,3 +1,9 @@
+## 6.0.2 (2023-04-18)
+
+### Bug fixes
+
+Fix a bug that could cause `diff` to loop endlessly when the input contains astral characters in specific positions.
+
 ## 6.0.1 (2023-03-28)
 
 ### Bug fixes
