@@ -205,8 +205,8 @@ function findMatch(
     for (let start = fromA + size;;) {
       if (!validIndex(a, start)) start++
       let end = start + size
+      if (!validIndex(a, end)) end += end == start + 1 ? 1 : -1
       if (end >= toA) break
-      if (!validIndex(a, end)) end--
       let seed = a.slice(start, end)
       let found = -1
       while ((found = rangeB.indexOf(seed, found + 1)) != -1) {
