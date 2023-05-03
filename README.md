@@ -1,3 +1,4 @@
+### Side-by-side Merge View
 
 <dl>
 <dt id="user-content-mergeconfig">
@@ -189,7 +190,60 @@ of, plus the side it is on. Or null if the editor isn't part of a
 merge view or the merge view hasn't finished initializing yet.</p>
 </dd>
 </dl>
-<p>This package also exports the diffing utilities it uses internally.</p>
+<h3>Unified Merge View</h3>
+<dl>
+<dt id="user-content-unifiedmergeview">
+  <code><strong><a href="#user-content-unifiedmergeview">unifiedMergeView</a></strong>(<a id="user-content-unifiedmergeview^config" href="#user-content-unifiedmergeview^config">config</a>: Object) → <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>[]</code></dt>
+
+<dd><p>Create an extension that causes the editor to display changes
+between its content and the given original document. Changed
+chunks will be highlighted, with uneditable widgets displaying the
+original text displayed above the new text.</p>
+<dl><dt id="user-content-unifiedmergeview^config">
+  <code><strong><a href="#user-content-unifiedmergeview^config">config</a></strong></code></dt>
+
+<dd><dl><dt id="user-content-unifiedmergeview^config.original">
+  <code><strong><a href="#user-content-unifiedmergeview^config.original">original</a></strong>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code></dt>
+
+<dd><p>The other document to compare the editor content with.</p>
+</dd><dt id="user-content-unifiedmergeview^config.highlightchanges">
+  <code><strong><a href="#user-content-unifiedmergeview^config.highlightchanges">highlightChanges</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>By default, the merge view will mark inserted and deleted text
+in changed chunks. Set this to false to turn that off.</p>
+</dd><dt id="user-content-unifiedmergeview^config.gutter">
+  <code><strong><a href="#user-content-unifiedmergeview^config.gutter">gutter</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>Controls whether a gutter marker is shown next to changed lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.syntaxhighlightdeletions">
+  <code><strong><a href="#user-content-unifiedmergeview^config.syntaxhighlightdeletions">syntaxHighlightDeletions</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>By default, deleted chunks are highlighted using the main
+editor's language. Since these are just fragments, not full
+documents, this doesn't always work well. Set this option to
+false to disable syntax highlighting for deleted lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.mergecontrols">
+  <code><strong><a href="#user-content-unifiedmergeview^config.mergecontrols">mergeControls</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>Controls whether accept/reject buttons are displayed for each
+changed chunk. Defaults to true.</p>
+</dd></dl></dd></dl></dd>
+<dt id="user-content-acceptchunk">
+  <code><strong><a href="#user-content-acceptchunk">acceptChunk</a></strong>(<a id="user-content-acceptchunk^view" href="#user-content-acceptchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-acceptchunk^pos" href="#user-content-acceptchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, accept the
+chunk under the given position or the cursor. This chunk will no
+longer be highlighted unless it is edited again.</p>
+</dd>
+<dt id="user-content-rejectchunk">
+  <code><strong><a href="#user-content-rejectchunk">rejectChunk</a></strong>(<a id="user-content-rejectchunk^view" href="#user-content-rejectchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-rejectchunk^pos" href="#user-content-rejectchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, reject the
+chunk under the given position or the cursor. Reverts that range
+to the content it has in the original document.</p>
+</dd>
+</dl>
+<h3>Diffing Utilities</h3>
 <dl>
 <dt id="user-content-change">
   <h4>
@@ -223,16 +277,34 @@ for deletions.</p>
 
 </dd>
 <dt id="user-content-diff">
-  <code><strong><a href="#user-content-diff">diff</a></strong>(<a id="user-content-diff^a" href="#user-content-diff^a">a</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-diff^b" href="#user-content-diff^b">b</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>) → readonly <a href="#user-content-change">Change</a>[]</code></dt>
+  <code><strong><a href="#user-content-diff">diff</a></strong>(<a id="user-content-diff^a" href="#user-content-diff^a">a</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-diff^b" href="#user-content-diff^b">b</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-diff^config" href="#user-content-diff^config">config</a>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a>) → readonly <a href="#user-content-change">Change</a>[]</code></dt>
 
 <dd><p>Compute the difference between two strings.</p>
 </dd>
 <dt id="user-content-presentablediff">
-  <code><strong><a href="#user-content-presentablediff">presentableDiff</a></strong>(<a id="user-content-presentablediff^a" href="#user-content-presentablediff^a">a</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-presentablediff^b" href="#user-content-presentablediff^b">b</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>) → readonly <a href="#user-content-change">Change</a>[]</code></dt>
+  <code><strong><a href="#user-content-presentablediff">presentableDiff</a></strong>(<a id="user-content-presentablediff^a" href="#user-content-presentablediff^a">a</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-presentablediff^b" href="#user-content-presentablediff^b">b</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, <a id="user-content-presentablediff^config" href="#user-content-presentablediff^config">config</a>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a>) → readonly <a href="#user-content-change">Change</a>[]</code></dt>
 
 <dd><p>Compute the difference between the given strings, and clean up the
 resulting diff for presentation to users by dropping short
 unchanged ranges, and aligning changes to word boundaries when
 appropriate.</p>
+</dd>
+<dt id="user-content-diffconfig">
+  <h4>
+    <code>interface</code>
+    <a href="#user-content-diffconfig">DiffConfig</a></h4>
+</dt>
+
+<dd><p>Options passed to diffing functions.</p>
+<dl><dt id="user-content-diffconfig.scanlimit">
+  <code><strong><a href="#user-content-diffconfig.scanlimit">scanLimit</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
+
+<dd><p>When given, this limits the depth of full (expensive) diff
+computations, causing them to give up and fall back to a faster
+but less precise approach when there is more than this many
+changed characters in a scanned range. This should help avoid
+quadratic running time on large, very different inputs.</p>
+</dd></dl>
+
 </dd>
 </dl>

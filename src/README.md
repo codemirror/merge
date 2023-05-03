@@ -1,3 +1,5 @@
+### Side-by-side Merge View
+
 @MergeConfig
 
 @DirectMergeConfig
@@ -8,7 +10,15 @@
 
 @getChunks
 
-This package also exports the diffing utilities it uses internally.
+### Unified Merge View
+
+@unifiedMergeView
+
+@acceptChunk
+
+@rejectChunk
+
+### Diffing Utilities
 
 @Change
 

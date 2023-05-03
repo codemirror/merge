@@ -28,8 +28,10 @@
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@codemirror/view": "^6.0.0",
-    "@codemirror/state": "^6.0.0"
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.11.0",
+    "@lezer/highlight": "^1.0.0"
   },
   "devDependencies": {
     "@codemirror/buildhelper": "^0.1.5"

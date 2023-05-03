@@ -4,9 +4,11 @@ import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, F
 import {Chunk, ChunkField} from "./chunk"
 
 type Config = {
-  sibling: () => EditorView,
+  sibling?: () => EditorView,
   highlightChanges: boolean,
   markGutter: boolean,
+  syntaxHighlightDeletions?: boolean,
+  mergeControls?: boolean,
   side: "a" | "b"
 }
 
@@ -33,8 +35,7 @@ export const decorateChunks = ViewPlugin.fromClass(class {
 
 export const changeGutter = Prec.low(gutter({
   class: "cm-changeGutter",
-  markers: view => view.plugin(decorateChunks)?.gutter || RangeSet.empty,
-  renderEmptyElements: false
+  markers: view => view.plugin(decorateChunks)?.gutter || RangeSet.empty
 }))
 
 function chunksChanged(s1: EditorState, s2: EditorState) {
@@ -227,7 +228,7 @@ class CollapseWidget extends WidgetType {
       let pos = view.posAtDOM(e.target as HTMLElement)
       view.dispatch({effects: uncollapse.of(pos)})
       let {side, sibling} = view.state.facet(mergeConfig)
-      sibling().dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), side == "a"))})
+      if (sibling) sibling().dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), side == "a"))})
     })
     return outer
   }

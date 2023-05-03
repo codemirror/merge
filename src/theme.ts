@@ -39,18 +39,18 @@ export const baseTheme = EditorView.baseTheme({
     overflowY: "visible !important"
   },
 
-  "&.cm-merge-a .cm-changedLine": {
+  "&.cm-merge-a .cm-changedLine, .cm-deletedChunk": {
     backgroundColor: "rgba(160, 128, 100, .08)"
   },
   "&.cm-merge-b .cm-changedLine": {
     backgroundColor: "rgba(100, 160, 128, .08)"
   },
 
-  "&light.cm-merge-a .cm-changedText": {
+  "&light.cm-merge-a .cm-changedText, &light .cm-deletedChunk .cm-deletedText": {
     background: "linear-gradient(#ee443366, #ee443366) bottom/100% 2px no-repeat",
   },
 
-  "&dark.cm-merge-a .cm-changedText": {
+  "&dark.cm-merge-a .cm-changedText, &dark .cm-deletedChunk .cm-deletedText": {
     background: "linear-gradient(#ffaa9966, #ffaa9966) bottom/100% 2px no-repeat",
   },
 
@@ -60,6 +60,23 @@ export const baseTheme = EditorView.baseTheme({
 
   "&dark.cm-merge-b .cm-changedText": {
     background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
+  },
+
+  ".cm-deletedChunk": {
+    paddingLeft: "6px",
+    "& .cm-chunkButtons": {
+      position: "absolute",
+      insetInlineEnd: "5px"
+    },
+    "& button": {
+      border: "none",
+      cursor: "pointer",
+      color: "white",
+      margin: "0 2px",
+      borderRadius: "3px",
+      "&[name=accept]": { background: "#2a2" },
+      "&[name=reject]": { background: "#d43" }
+    },
   },
 
   ".cm-collapsedLines": {
@@ -76,8 +93,8 @@ export const baseTheme = EditorView.baseTheme({
   },
 
   ".cm-changeGutter": { width: "3px", paddingLeft: "1px" },
-  "&light.cm-merge-a .cm-changedLineGutter": { background: "#e43" },
-  "&dark.cm-merge-a .cm-changedLineGutter": { background: "#fa9" },
+  "&light.cm-merge-a .cm-changedLineGutter, &light .cm-deletedLineGutter": { background: "#e43" },
+  "&dark.cm-merge-a .cm-changedLineGutter, &dark .cm-deletedLineGutter": { background: "#fa9" },
   "&light.cm-merge-b .cm-changedLineGutter": { background: "#2b2" },
   "&dark.cm-merge-b .cm-changedLineGutter": { background: "#8f8" },
 })
