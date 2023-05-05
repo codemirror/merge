@@ -48,10 +48,11 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
     baseTheme,
     EditorView.editorAttributes.of({class: "cm-merge-b"}),
     EditorState.transactionExtender.of(tr => {
-      let setDoc = tr.effects.find(e => e.is(setOriginalDoc))
-      if (!tr.docChanged && !setDoc) return null
-      let chunks = setDoc ? Chunk.build(setDoc.value, tr.newDoc)
-        : Chunk.updateB(tr.startState.field(ChunkField), tr.startState.field(originalDoc), tr.newDoc, tr.changes)
+      let updateDoc = tr.effects.find(e => e.is(updateOriginalDoc))
+      if (!tr.docChanged && !updateDoc) return null
+      let prev = tr.startState.field(ChunkField)
+      let chunks = updateDoc ? Chunk.updateA(prev, updateDoc.value.doc, tr.newDoc, updateDoc.value.changes)
+        : Chunk.updateB(prev, tr.startState.field(originalDoc), tr.newDoc, tr.changes)
       return {effects: setChunks.of(chunks)}
     }),
     mergeConfig.of({
@@ -67,12 +68,12 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
   ]
 }
 
-const setOriginalDoc = StateEffect.define<Text>()
+const updateOriginalDoc = StateEffect.define<{doc: Text, changes: ChangeSet}>()
 
 const originalDoc = StateField.define<Text>({
   create: () => Text.empty,
   update(doc, tr) {
-    for (let e of tr.effects) if (e.is(setOriginalDoc)) doc = e.value
+    for (let e of tr.effects) if (e.is(updateOriginalDoc)) doc = e.value.doc
     return doc
   }
 })
@@ -168,8 +169,8 @@ export function acceptChunk(view: EditorView, pos?: number) {
   let insert = view.state.sliceDoc(chunk.fromB, Math.max(chunk.fromB, chunk.toB - 1))
   let orig = view.state.field(originalDoc)
   if (chunk.fromB != chunk.toB && chunk.toA <= orig.length) insert += view.state.lineBreak
-  let updatedDoc = ChangeSet.of({from: chunk.fromA, to: Math.min(orig.length, chunk.toA), insert}, orig.length).apply(orig)
-  view.dispatch({effects: setOriginalDoc.of(updatedDoc)})
+  let changes = ChangeSet.of({from: chunk.fromA, to: Math.min(orig.length, chunk.toA), insert}, orig.length)
+  view.dispatch({effects: updateOriginalDoc.of({doc: changes.apply(orig), changes})})
   return true
 }
 
