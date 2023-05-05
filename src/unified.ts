@@ -109,6 +109,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
       reject.onmousedown = e => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)) }
     }
 
+    let content = dom.appendChild(document.createElement("del"))
     let changes = chunk.changes, changeI = 0, inside = false
     function add(from: number, to: number, cls: string) {
       for (let at = from; at < to;) {
@@ -126,9 +127,9 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
           if (nodeCls) {
             let span = dom.appendChild(document.createElement("span"))
             span.className = nodeCls
-            span.appendChild(node)
+            content.appendChild(node)
           } else {
-            dom.appendChild(node)
+            content.appendChild(node)
           }
         }
         at = nextStop

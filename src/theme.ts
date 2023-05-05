@@ -62,6 +62,10 @@ export const baseTheme = EditorView.baseTheme({
     background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
   },
 
+  "del, ins": {
+    textDecoration: "none"
+  },
+
   ".cm-deletedChunk": {
     paddingLeft: "6px",
     "& .cm-chunkButtons": {

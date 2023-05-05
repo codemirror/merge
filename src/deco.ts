@@ -48,6 +48,7 @@ function configChanged(s1: EditorState, s2: EditorState) {
 
 const changedLine = Decoration.line({class: "cm-changedLine"})
 const changedText = Decoration.mark({class: "cm-changedText"})
+const inserted = Decoration.mark({tagName: "ins"}), deleted = Decoration.mark({tagName: "del"})
 
 const changedLineGutterMarker = new class extends GutterMarker {
   elementClass = "cm-changedLineGutter"
@@ -60,6 +61,7 @@ function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolea
   let changeI = 0
   if (from != to) {
     builder.add(from, from, changedLine)
+    builder.add(from, to, isA ? deleted : inserted)
     if (gutterBuilder) gutterBuilder.add(from, from, changedLineGutterMarker)
     for (let iter = doc.iterRange(from, to - 1), pos = from; !iter.next().done;) {
       if (iter.lineBreak) {
