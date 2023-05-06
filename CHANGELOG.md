@@ -1,3 +1,13 @@
+## 6.1.0 (2023-05-06)
+
+### Bug fixes
+
+Add `<ins>`/`<del>` tags around inserted and deleted lines to give screen readers a chance to communicate their role.
+
+### New features
+
+The new `unifiedMergeView` extension can be used to display a diff inside a single editor, by inserting deleted content as widgets in the document.
+
 ## 6.0.2 (2023-04-18)
 
 ### Bug fixes
