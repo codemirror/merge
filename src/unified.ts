@@ -7,6 +7,7 @@ import {Chunk, setChunks, ChunkField} from "./chunk"
 import {Change} from "./diff"
 import {decorateChunks, mergeConfig} from "./deco"
 import {baseTheme} from "./theme"
+import {getChunks} from "./mergeview";
 
 interface UnifiedMergeConfig {
   /// The other document to compare the editor content with.
@@ -201,7 +202,7 @@ function buildDeletedChunks(state: EditorState) {
 const deletedChunks = StateField.define<DecorationSet>({
   create: state => buildDeletedChunks(state),
   update(deco, tr) {
-    return tr.state.field(ChunkField) != tr.startState.field(ChunkField) ? buildDeletedChunks(tr.state) : deco
+    return getChunks(tr.state)?.chunks != getChunks(tr.startState)?.chunks ? buildDeletedChunks(tr.state) : deco
   },
   provide: f => EditorView.decorations.from(f)
 })
