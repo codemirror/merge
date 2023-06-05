@@ -1,3 +1,9 @@
+## 6.1.1 (2023-06-05)
+
+### Bug fixes
+
+Fix a crash when `unifiedMergeView` is added to an existing state by reconfiguration.
+
 ## 6.1.0 (2023-05-06)
 
 ### Bug fixes
