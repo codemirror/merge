@@ -73,7 +73,10 @@ let scanLimit = 1e9
 // Implementation of Myers 1986 "An O(ND) Difference Algorithm and Its Variations"
 function findSnake(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Change[] {
   let lenA = toA - fromA, lenB = toB - fromB
-  if (Math.min(lenA, lenB) > scanLimit * 16) return crudeMatch(a, fromA, toA, b, fromB, toB)
+  if (scanLimit < 1e9 && Math.min(lenA, lenB) > scanLimit * 16) {
+    if (Math.min(lenA, lenB) > scanLimit * 64) return [new Change(fromA, toA, fromB, toB)]
+    return crudeMatch(a, fromA, toA, b, fromB, toB)
+  }
   let off = Math.ceil((lenA + lenB) / 2)
   frontier1.reset(off)
   frontier2.reset(off)
