@@ -1,3 +1,9 @@
+## 6.1.2 (2023-08-18)
+
+### Bug fixes
+
+Fall back to treating entire documents as changed when they are too large to compute a diff in a reasonable timeframe.
+
 ## 6.1.1 (2023-06-05)
 
 ### Bug fixes
