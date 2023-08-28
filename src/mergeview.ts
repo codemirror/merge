@@ -1,5 +1,5 @@
 import {EditorView} from "@codemirror/view"
-import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment} from "@codemirror/state"
+import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet} from "@codemirror/state"
 import {Chunk, setChunks, ChunkField} from "./chunk"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
         mergeConfig, changeGutter} from "./deco"
@@ -145,29 +145,31 @@ export class MergeView {
       state: stateA,
       parent: wrapA,
       root: config.root,
-      dispatch: tr => this.dispatch(tr, this.a)
+      dispatchTransactions: trs => this.dispatch(trs, this.a)
     })
     this.b = new EditorView({
       state: stateB,
       parent: wrapB,
       root: config.root,
-      dispatch: tr => this.dispatch(tr, this.b)
+      dispatchTransactions: trs => this.dispatch(trs, this.b)
     })
     this.setupRevertControls(!!config.revertControls, config.revertControls == "b-to-a", config.renderRevertControl)
     if (config.parent) config.parent.appendChild(this.dom)
     this.scheduleMeasure()
   }
 
-  private dispatch(tr: Transaction, target: EditorView) {
-    if (tr.docChanged) {
-      this.chunks = target == this.a ? Chunk.updateA(this.chunks, tr.newDoc, this.b.state.doc, tr.changes)
-        : Chunk.updateB(this.chunks, this.a.state.doc, tr.newDoc, tr.changes)
-      target.update([tr, tr.state.update({effects: setChunks.of(this.chunks)})])
+  private dispatch(trs: readonly Transaction[], target: EditorView) {
+    if (trs.some(tr => tr.docChanged)) {
+      let last = trs[trs.length - 1]
+      let changes = trs.reduce((chs, tr) => chs.compose(tr.changes), ChangeSet.empty(trs[0].startState.doc.length))
+      this.chunks = target == this.a ? Chunk.updateA(this.chunks, last.newDoc, this.b.state.doc, changes)
+        : Chunk.updateB(this.chunks, this.a.state.doc, last.newDoc, changes)
+      target.update([...trs, last.state.update({effects: setChunks.of(this.chunks)})])
       let other = target == this.a ? this.b : this.a
       other.update([other.state.update({effects: setChunks.of(this.chunks)})])
       this.scheduleMeasure()
     } else {
-      target.update([tr])
+      target.update(trs)
     }
   }
 
