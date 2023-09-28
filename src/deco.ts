@@ -134,57 +134,45 @@ export const Spacers = StateField.define<DecorationSet>({
   provide: f => EditorView.decorations.from(f)
 })
 
-const epsilon = .0001
+const epsilon = .01
 
 export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chunk[]) {
   let buildA = new RangeSetBuilder<Decoration>(), buildB = new RangeSetBuilder<Decoration>()
-  let linesA = a.viewportLineBlocks, linesB = b.viewportLineBlocks, iA = 0, iB = 0
   let spacersA = a.state.field(Spacers).iter(), spacersB = b.state.field(Spacers).iter()
   let posA = 0, posB = 0, offA = 0, offB = 0
   chunks: for (let chunkI = 0;; chunkI++) {
     let chunk = chunkI < chunks.length ? chunks[chunkI] : null
-    let [endA, endB] = chunk ? [chunk.fromA, chunk.fromB] : [a.state.doc.length, b.state.doc.length]
-    // Find lines whose start lies in the unchanged pos-end ranges and
-    // who have a matching line in the other editor.
-    if (posA < endA && posB < endB) for (;;) {
-      if (iA == linesA.length || iB == linesB.length) break chunks
-      let lineA = linesA[iA], lineB = linesB[iB]
-      while (spacersA.value && spacersA.from < lineA.from) {
-        offA -= (spacersA.value.spec.widget as any).height
-        spacersA.next()
-      }
-      while (spacersB.value && spacersB.from < lineB.from) {
-        offB -= (spacersB.value.spec.widget as any).height
-        spacersB.next()
-      }
-      if (lineA.from >= endA || lineB.from >= endB) break
-      let relA = lineA.from - posA, relB = lineB.from - posB
-      if (relA < 0 || relA < relB) {
-        iA++
-      } else if (relB < 0 || relB < relA) {
-        iB++
-      } else { // Align these two lines
-        let diff = (lineA.top + offA) - (lineB.top + offB)
-        if (diff < -epsilon) {
-          offA -= diff
-          buildA.add(lineA.from, lineA.from, Decoration.widget({
-            widget: new Spacer(-diff),
-            block: true,
-            side: -1
-          }))
-        } else if (diff > epsilon) {
-          offB += diff
-          buildB.add(lineB.from, lineB.from, Decoration.widget({
-            widget: new Spacer(diff),
-            block: true,
-            side: -1
-          }))
-        }
-        iA++; iB++
+    // A range at posA/posB is unchanged, must be aligned.
+    if (posA < (chunk ? chunk.fromA : a.state.doc.length)) {
+      let heightA = a.lineBlockAt(posA).top + offA
+      let heightB = b.lineBlockAt(posB).top + offB
+      let diff = heightA - heightB
+      if (diff < -epsilon) {
+        offA -= diff
+        buildA.add(posA, posA, Decoration.widget({
+          widget: new Spacer(-diff),
+          block: true,
+          side: -1
+        }))
+      } else if (diff > epsilon) {
+        offB += diff
+        buildB.add(posB, posB, Decoration.widget({
+          widget: new Spacer(diff),
+          block: true,
+          side: -1
+        }))
       }
     }
     if (!chunk) break
     posA = chunk.toA; posB = chunk.toB
+    while (spacersA.value && spacersA.from < posA) {
+      offA -= (spacersA.value.spec.widget as Spacer).height
+      spacersA.next()
+    }
+    while (spacersB.value && spacersB.from < posB) {
+      offB -= (spacersB.value.spec.widget as Spacer).height
+      spacersB.next()
+    }
   }
   while (spacersA.value) {
     offA -= (spacersA.value.spec.widget as any).height
@@ -195,16 +183,19 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
     spacersB.next()
   }
   let docDiff = (a.contentHeight + offA) - (b.contentHeight + offB)
-  if (docDiff < epsilon) buildA.add(a.state.doc.length, a.state.doc.length, Decoration.widget({
-    widget: new Spacer(-docDiff),
-    block: true,
-    side: 1
-  }))
-  else if (docDiff > epsilon) buildB.add(b.state.doc.length, b.state.doc.length, Decoration.widget({
-    widget: new Spacer(docDiff),
-    block: true,
-    side: 1
-  }))
+  if (docDiff < epsilon) {
+    buildA.add(a.state.doc.length, a.state.doc.length, Decoration.widget({
+      widget: new Spacer(-docDiff),
+      block: true,
+      side: 1
+    }))
+  } else if (docDiff > epsilon) {
+    buildB.add(b.state.doc.length, b.state.doc.length, Decoration.widget({
+      widget: new Spacer(docDiff),
+      block: true,
+      side: 1
+    }))
+  }
 
   let decoA = buildA.finish(), decoB = buildB.finish()
   if (!RangeSet.eq([decoA], [a.state.field(Spacers)]))
