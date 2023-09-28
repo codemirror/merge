@@ -1,3 +1,9 @@
+## 6.1.3 (2023-09-28)
+
+### Bug fixes
+
+Create alignment spacers for the whole document, not just the viewport, to avoid scroll position popping and misalignment.
+
 ## 6.1.2 (2023-08-18)
 
 ### Bug fixes
