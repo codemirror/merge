@@ -1,8 +1,8 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet} from "@codemirror/state"
-import {Chunk, setChunks, ChunkField} from "./chunk"
-import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged,
-        mergeConfig, changeGutter} from "./deco"
+import {Chunk} from "./chunk"
+import {setChunks, ChunkField, mergeConfig} from "./merge"
+import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
 
 /// Configuration options to `MergeView` that can be provided both
@@ -321,13 +321,4 @@ function rm(elt: HTMLElement) {
   let next = elt.nextSibling
   elt.remove()
   return next as HTMLElement | null
-}
-
-/// Get the changed chunks for the merge view that this editor is part
-/// of, plus the side it is on. Or null if the editor isn't part of a
-/// merge view or the merge view hasn't finished initializing yet.
-export function getChunks(state: EditorState) {
-  let field = state.field(ChunkField, false)
-  if (!field) return null
-  return {chunks: field, side: state.facet(mergeConfig).side}
 }

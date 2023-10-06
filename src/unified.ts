@@ -3,9 +3,10 @@ import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
         RangeSet, ChangeSet} from "@codemirror/state"
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
-import {Chunk, setChunks, ChunkField} from "./chunk"
+import {Chunk} from "./chunk"
+import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {Change} from "./diff"
-import {decorateChunks, mergeConfig} from "./deco"
+import {decorateChunks} from "./deco"
 import {baseTheme} from "./theme"
 
 interface UnifiedMergeConfig {

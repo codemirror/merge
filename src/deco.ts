@@ -1,20 +1,8 @@
 import {EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate,
         WidgetType, GutterMarker, gutter} from "@codemirror/view"
-import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Facet, Prec} from "@codemirror/state"
-import {Chunk, ChunkField} from "./chunk"
-
-type Config = {
-  sibling?: () => EditorView,
-  highlightChanges: boolean,
-  markGutter: boolean,
-  syntaxHighlightDeletions?: boolean,
-  mergeControls?: boolean,
-  side: "a" | "b"
-}
-
-export const mergeConfig = Facet.define<Config, Config>({
-  combine: values => values[0]
-})
+import {EditorState, RangeSetBuilder, Text, StateField, StateEffect, RangeSet, Prec} from "@codemirror/state"
+import {Chunk} from "./chunk"
+import {ChunkField, mergeConfig} from "./merge"
 
 export const decorateChunks = ViewPlugin.fromClass(class {
   deco: DecorationSet

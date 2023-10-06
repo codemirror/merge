@@ -6,10 +6,6 @@
 
 @MergeView
 
-@Chunk
-
-@getChunks
-
 ### Unified Merge View
 
 @unifiedMergeView
@@ -17,6 +13,16 @@
 @acceptChunk
 
 @rejectChunk
+
+### Chunks
+
+@Chunk
+
+@getChunks
+
+@goToNextChunk
+
+@goToPreviousChunk
 
 ### Diffing Utilities
 

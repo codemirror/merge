@@ -1,4 +1,4 @@
-import {Text, ChangeDesc, StateField, StateEffect} from "@codemirror/state"
+import {Text, ChangeDesc} from "@codemirror/state"
 import {Change, presentableDiff} from "./diff"
 
 const limit = {scanLimit: 500}
@@ -160,15 +160,3 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
     result.push(chunks[chunkI++].offset(offA, offB))
   return result
 }
-
-export const setChunks = StateEffect.define<readonly Chunk[]>()
-
-export const ChunkField = StateField.define<readonly Chunk[]>({
-  create(state) {
-    return null as any
-  },
-  update(current, tr) {
-    for (let e of tr.effects) if (e.is(setChunks)) current = e.value
-    return current
-  }
-})
