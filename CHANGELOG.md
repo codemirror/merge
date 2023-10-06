@@ -1,3 +1,9 @@
+## 6.2.0 (2023-10-06)
+
+### New features
+
+The package now exports `goToNextChunk` and `goToPreviousChunk` commands that allow by-changed-chunk document navigation.
+
 ## 6.1.3 (2023-09-28)
 
 ### Bug fixes
