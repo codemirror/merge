@@ -1,3 +1,26 @@
+<!-- NOTE: README.md is generated from src/README.md -->
+
+# @codemirror/merge [![NPM version](https://img.shields.io/npm/v/@codemirror/merge.svg)](https://www.npmjs.org/package/@codemirror/merge)
+
+[ [**WEBSITE**](https://codemirror.net/) | [**ISSUES**](https://github.com/codemirror/dev/issues) | [**FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG**](https://github.com/codemirror/merge/blob/main/CHANGELOG.md) ]
+
+This package implements a merge interface for the
+[CodeMirror](https://codemirror.net/) code editor.
+
+The [project page](https://codemirror.net/) has more information, a
+number of [examples](https://codemirror.net/examples/) and the
+[documentation](https://codemirror.net/docs/).
+
+This code is released under an
+[MIT license](https://github.com/codemirror/merge/tree/main/LICENSE).
+
+We aim to be an inclusive, welcoming community. To make that explicit,
+we have a [code of
+conduct](http://contributor-covenant.org/version/1/1/0/) that applies
+to communication around the project.
+
+## API Reference
+
 ### Side-by-side Merge View
 
 <dl>
@@ -40,6 +63,10 @@ in changed chunks. Set this to false to turn that off.</p>
 <code>margin</code> gives the number of lines to leave visible after/before
 a change (default is 3), and <code>minSize</code> gives the minimum amount
 of collapsible lines that need to be present (defaults to 4).</p>
+</dd><dt id="user-content-mergeconfig.diffconfig">
+  <code><strong><a href="#user-content-mergeconfig.diffconfig">diffConfig</a></strong>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a></code></dt>
+
+<dd><p>Pass options to the diff algorithm.</p>
 </dd></dl>
 
 </dd>
@@ -116,6 +143,66 @@ with a height and <code>overflow: auto</code> to make them scrollable.</p>
 </dd></dl>
 
 </dd>
+</dl>
+<h3>Unified Merge View</h3>
+<dl>
+<dt id="user-content-unifiedmergeview">
+  <code><strong><a href="#user-content-unifiedmergeview">unifiedMergeView</a></strong>(<a id="user-content-unifiedmergeview^config" href="#user-content-unifiedmergeview^config">config</a>: Object) → ({extension: <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>} | readonly <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>[] | <a href="https://codemirror.net/docs/ref#state.StateField">StateField</a>&lt;<a href="https://codemirror.net/docs/ref#view.DecorationSet">DecorationSet</a>&gt;)[]</code></dt>
+
+<dd><p>Create an extension that causes the editor to display changes
+between its content and the given original document. Changed
+chunks will be highlighted, with uneditable widgets displaying the
+original text displayed above the new text.</p>
+<dl><dt id="user-content-unifiedmergeview^config">
+  <code><strong><a href="#user-content-unifiedmergeview^config">config</a></strong></code></dt>
+
+<dd><dl><dt id="user-content-unifiedmergeview^config.original">
+  <code><strong><a href="#user-content-unifiedmergeview^config.original">original</a></strong>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code></dt>
+
+<dd><p>The other document to compare the editor content with.</p>
+</dd><dt id="user-content-unifiedmergeview^config.highlightchanges">
+  <code><strong><a href="#user-content-unifiedmergeview^config.highlightchanges">highlightChanges</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>By default, the merge view will mark inserted and deleted text
+in changed chunks. Set this to false to turn that off.</p>
+</dd><dt id="user-content-unifiedmergeview^config.gutter">
+  <code><strong><a href="#user-content-unifiedmergeview^config.gutter">gutter</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>Controls whether a gutter marker is shown next to changed lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.syntaxhighlightdeletions">
+  <code><strong><a href="#user-content-unifiedmergeview^config.syntaxhighlightdeletions">syntaxHighlightDeletions</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>By default, deleted chunks are highlighted using the main
+editor's language. Since these are just fragments, not full
+documents, this doesn't always work well. Set this option to
+false to disable syntax highlighting for deleted lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.mergecontrols">
+  <code><strong><a href="#user-content-unifiedmergeview^config.mergecontrols">mergeControls</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>Controls whether accept/reject buttons are displayed for each
+changed chunk. Defaults to true.</p>
+</dd><dt id="user-content-unifiedmergeview^config.diffconfig">
+  <code><strong><a href="#user-content-unifiedmergeview^config.diffconfig">diffConfig</a></strong>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a></code></dt>
+
+<dd><p>Pass options to the diff algorithm.</p>
+</dd></dl></dd></dl></dd>
+<dt id="user-content-acceptchunk">
+  <code><strong><a href="#user-content-acceptchunk">acceptChunk</a></strong>(<a id="user-content-acceptchunk^view" href="#user-content-acceptchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-acceptchunk^pos" href="#user-content-acceptchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, accept the
+chunk under the given position or the cursor. This chunk will no
+longer be highlighted unless it is edited again.</p>
+</dd>
+<dt id="user-content-rejectchunk">
+  <code><strong><a href="#user-content-rejectchunk">rejectChunk</a></strong>(<a id="user-content-rejectchunk^view" href="#user-content-rejectchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-rejectchunk^pos" href="#user-content-rejectchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, reject the
+chunk under the given position or the cursor. Reverts that range
+to the content it has in the original document.</p>
+</dd>
+</dl>
+<h3>Chunks</h3>
+<dl>
 <dt id="user-content-chunk">
   <h4>
     <code>class</code>
@@ -167,80 +254,38 @@ last line in the chunk otherwise.</p>
 <dd><p>Returns <code>fromB</code> if the chunk is empty in B, or the end of the
 last line in the chunk otherwise.</p>
 </dd><dt id="user-content-chunk^build">
-  <code>static <strong><a href="#user-content-chunk^build">build</a></strong>(<a id="user-content-chunk^build^a" href="#user-content-chunk^build^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^build^b" href="#user-content-chunk^build^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+  <code>static <strong><a href="#user-content-chunk^build">build</a></strong>(<a id="user-content-chunk^build^a" href="#user-content-chunk^build^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^build^b" href="#user-content-chunk^build^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^build^conf" href="#user-content-chunk^build^conf">conf</a>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
 
 <dd><p>Build a set of changed chunks for the given documents.</p>
 </dd><dt id="user-content-chunk^updatea">
-  <code>static <strong><a href="#user-content-chunk^updatea">updateA</a></strong>(<a id="user-content-chunk^updatea^chunks" href="#user-content-chunk^updatea^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updatea^a" href="#user-content-chunk^updatea^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^b" href="#user-content-chunk^updatea^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^changes" href="#user-content-chunk^updatea^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+  <code>static <strong><a href="#user-content-chunk^updatea">updateA</a></strong>(<a id="user-content-chunk^updatea^chunks" href="#user-content-chunk^updatea^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updatea^a" href="#user-content-chunk^updatea^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^b" href="#user-content-chunk^updatea^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updatea^changes" href="#user-content-chunk^updatea^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>, <a id="user-content-chunk^updatea^conf" href="#user-content-chunk^updatea^conf">conf</a>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
 
 <dd><p>Update a set of chunks for changes in document A. <code>a</code> should
 hold the updated document A.</p>
 </dd><dt id="user-content-chunk^updateb">
-  <code>static <strong><a href="#user-content-chunk^updateb">updateB</a></strong>(<a id="user-content-chunk^updateb^chunks" href="#user-content-chunk^updateb^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updateb^a" href="#user-content-chunk^updateb^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^b" href="#user-content-chunk^updateb^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^changes" href="#user-content-chunk^updateb^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
+  <code>static <strong><a href="#user-content-chunk^updateb">updateB</a></strong>(<a id="user-content-chunk^updateb^chunks" href="#user-content-chunk^updateb^chunks">chunks</a>: readonly <a href="#user-content-chunk">Chunk</a>[], <a id="user-content-chunk^updateb^a" href="#user-content-chunk^updateb^a">a</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^b" href="#user-content-chunk^updateb^b">b</a>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, <a id="user-content-chunk^updateb^changes" href="#user-content-chunk^updateb^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeDesc">ChangeDesc</a>, <a id="user-content-chunk^updateb^conf" href="#user-content-chunk^updateb^conf">conf</a>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a>) → readonly <a href="#user-content-chunk">Chunk</a>[]</code></dt>
 
 <dd><p>Update a set of chunks for changes in document B.</p>
 </dd></dl>
 
 </dd>
 <dt id="user-content-getchunks">
-  <code><strong><a href="#user-content-getchunks">getChunks</a></strong>(<a id="user-content-getchunks^state" href="#user-content-getchunks^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>) → {chunks: readonly <a href="#user-content-chunk">Chunk</a>[], side: &quot;a&quot; | &quot;b&quot;} | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null">null</a></code></dt>
+  <code><strong><a href="#user-content-getchunks">getChunks</a></strong>(<a id="user-content-getchunks^state" href="#user-content-getchunks^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>) → {chunks: readonly <a href="#user-content-chunk">Chunk</a>[], side: &quot;a&quot; | &quot;b&quot; | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null">null</a>} | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null">null</a></code></dt>
 
 <dd><p>Get the changed chunks for the merge view that this editor is part
-of, plus the side it is on. Or null if the editor isn't part of a
-merge view or the merge view hasn't finished initializing yet.</p>
+of, plus the side it is on if it is part of a <code>MergeView</code>. Returns
+null if the editor doesn't have a merge extension active or the
+merge view hasn't finished initializing yet.</p>
 </dd>
-</dl>
-<h3>Unified Merge View</h3>
-<dl>
-<dt id="user-content-unifiedmergeview">
-  <code><strong><a href="#user-content-unifiedmergeview">unifiedMergeView</a></strong>(<a id="user-content-unifiedmergeview^config" href="#user-content-unifiedmergeview^config">config</a>: Object) → <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>[]</code></dt>
+<dt id="user-content-gotonextchunk">
+  <code><strong><a href="#user-content-gotonextchunk">goToNextChunk</a></strong>: <a href="https://codemirror.net/docs/ref#state.StateCommand">StateCommand</a></code></dt>
 
-<dd><p>Create an extension that causes the editor to display changes
-between its content and the given original document. Changed
-chunks will be highlighted, with uneditable widgets displaying the
-original text displayed above the new text.</p>
-<dl><dt id="user-content-unifiedmergeview^config">
-  <code><strong><a href="#user-content-unifiedmergeview^config">config</a></strong></code></dt>
-
-<dd><dl><dt id="user-content-unifiedmergeview^config.original">
-  <code><strong><a href="#user-content-unifiedmergeview^config.original">original</a></strong>: <a href="https://codemirror.net/docs/ref#state.Text">Text</a> | <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code></dt>
-
-<dd><p>The other document to compare the editor content with.</p>
-</dd><dt id="user-content-unifiedmergeview^config.highlightchanges">
-  <code><strong><a href="#user-content-unifiedmergeview^config.highlightchanges">highlightChanges</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
-
-<dd><p>By default, the merge view will mark inserted and deleted text
-in changed chunks. Set this to false to turn that off.</p>
-</dd><dt id="user-content-unifiedmergeview^config.gutter">
-  <code><strong><a href="#user-content-unifiedmergeview^config.gutter">gutter</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
-
-<dd><p>Controls whether a gutter marker is shown next to changed lines.</p>
-</dd><dt id="user-content-unifiedmergeview^config.syntaxhighlightdeletions">
-  <code><strong><a href="#user-content-unifiedmergeview^config.syntaxhighlightdeletions">syntaxHighlightDeletions</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
-
-<dd><p>By default, deleted chunks are highlighted using the main
-editor's language. Since these are just fragments, not full
-documents, this doesn't always work well. Set this option to
-false to disable syntax highlighting for deleted lines.</p>
-</dd><dt id="user-content-unifiedmergeview^config.mergecontrols">
-  <code><strong><a href="#user-content-unifiedmergeview^config.mergecontrols">mergeControls</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
-
-<dd><p>Controls whether accept/reject buttons are displayed for each
-changed chunk. Defaults to true.</p>
-</dd></dl></dd></dl></dd>
-<dt id="user-content-acceptchunk">
-  <code><strong><a href="#user-content-acceptchunk">acceptChunk</a></strong>(<a id="user-content-acceptchunk^view" href="#user-content-acceptchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-acceptchunk^pos" href="#user-content-acceptchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
-
-<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, accept the
-chunk under the given position or the cursor. This chunk will no
-longer be highlighted unless it is edited again.</p>
+<dd><p>Move the selection to the next changed chunk.</p>
 </dd>
-<dt id="user-content-rejectchunk">
-  <code><strong><a href="#user-content-rejectchunk">rejectChunk</a></strong>(<a id="user-content-rejectchunk^view" href="#user-content-rejectchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-rejectchunk^pos" href="#user-content-rejectchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+<dt id="user-content-gotopreviouschunk">
+  <code><strong><a href="#user-content-gotopreviouschunk">goToPreviousChunk</a></strong>: <a href="https://codemirror.net/docs/ref#state.StateCommand">StateCommand</a></code></dt>
 
-<dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, reject the
-chunk under the given position or the cursor. Reverts that range
-to the content it has in the original document.</p>
+<dd><p>Move the selection to the previous changed chunk.</p>
 </dd>
 </dl>
 <h3>Diffing Utilities</h3>
