@@ -1,6 +1,7 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet} from "@codemirror/state"
 import {Chunk} from "./chunk"
+import {DiffConfig} from "./diff"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, changeGutter} from "./deco"
 import {baseTheme, externalTheme} from "./theme"
@@ -26,7 +27,9 @@ export interface MergeConfig {
   /// `margin` gives the number of lines to leave visible after/before
   /// a change (default is 3), and `minSize` gives the minimum amount
   /// of collapsible lines that need to be present (defaults to 4).
-  collapseUnchanged?: {margin?: number, minSize?: number}
+  collapseUnchanged?: {margin?: number, minSize?: number},
+  /// Pass options to the diff algorithm.
+  diffConfig?: DiffConfig
 }
 
 /// Configuration options given to the [`MergeView`](#merge.MergeView)
@@ -67,6 +70,7 @@ export class MergeView {
   private revertToA = false
   private revertToLeft = false
   private renderRevert: (() => HTMLElement) | undefined
+  private diffConf: DiffConfig | undefined
 
   /// The current set of changed chunks.
   chunks: readonly Chunk[]
@@ -75,6 +79,8 @@ export class MergeView {
 
   /// Create a new merge view.
   constructor(config: DirectMergeConfig) {
+    this.diffConf = config.diffConfig
+
     let sharedExtensions = [
       Prec.low(decorateChunks),
       baseTheme,
@@ -122,7 +128,7 @@ export class MergeView {
         sharedExtensions
       ]
     })
-    this.chunks = Chunk.build(stateA.doc, stateB.doc)
+    this.chunks = Chunk.build(stateA.doc, stateB.doc, this.diffConf)
     let add = [
       ChunkField.init(() => this.chunks),
       collapseCompartment.of(config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [])
@@ -162,8 +168,8 @@ export class MergeView {
     if (trs.some(tr => tr.docChanged)) {
       let last = trs[trs.length - 1]
       let changes = trs.reduce((chs, tr) => chs.compose(tr.changes), ChangeSet.empty(trs[0].startState.doc.length))
-      this.chunks = target == this.a ? Chunk.updateA(this.chunks, last.newDoc, this.b.state.doc, changes)
-        : Chunk.updateB(this.chunks, this.a.state.doc, last.newDoc, changes)
+      this.chunks = target == this.a ? Chunk.updateA(this.chunks, last.newDoc, this.b.state.doc, changes, this.diffConf)
+        : Chunk.updateB(this.chunks, this.a.state.doc, last.newDoc, changes, this.diffConf)
       target.update([...trs, last.state.update({effects: setChunks.of(this.chunks)})])
       let other = target == this.a ? this.b : this.a
       other.update([other.state.update({effects: setChunks.of(this.chunks)})])
@@ -175,6 +181,9 @@ export class MergeView {
 
   /// Reconfigure an existing merge view.
   reconfigure(config: MergeConfig) {
+    if ("diffConfig" in config) {
+      this.diffConf = config.diffConfig
+    }
     if ("orientation" in config) {
       let aB = config.orientation != "b-a"
       if (aB != (this.editorDOM.firstChild == this.a.dom.parentNode)) {

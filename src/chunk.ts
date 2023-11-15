@@ -1,7 +1,5 @@
 import {Text, ChangeDesc} from "@codemirror/state"
-import {Change, presentableDiff} from "./diff"
-
-const limit = {scanLimit: 500}
+import {Change, presentableDiff, DiffConfig} from "./diff"
 
 /// A chunk describes a range of lines which have changed content in
 /// them. Either side (a/b) may either be empty (when its `to` is
@@ -43,19 +41,19 @@ export class Chunk {
   get endB() { return Math.max(this.fromB, this.toB - 1) }
 
   /// Build a set of changed chunks for the given documents.
-  static build(a: Text, b: Text): readonly Chunk[] {
-    return toChunks(presentableDiff(a.toString(), b.toString(), limit), a, b, 0, 0)
+  static build(a: Text, b: Text, conf?: DiffConfig): readonly Chunk[] {
+    return toChunks(presentableDiff(a.toString(), b.toString(), conf), a, b, 0, 0)
   }
 
   /// Update a set of chunks for changes in document A. `a` should
   /// hold the updated document A.
-  static updateA(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc) {
-    return updateChunks(findRangesForChange(chunks, changes, true, b.length), chunks, a, b)
+  static updateA(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc, conf?: DiffConfig) {
+    return updateChunks(findRangesForChange(chunks, changes, true, b.length), chunks, a, b, conf)
   }
 
   /// Update a set of chunks for changes in document B.
-  static updateB(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc) {
-    return updateChunks(findRangesForChange(chunks, changes, false, a.length), chunks, a, b)
+  static updateB(chunks: readonly Chunk[], a: Text, b: Text, changes: ChangeDesc, conf?: DiffConfig) {
+    return updateChunks(findRangesForChange(chunks, changes, false, a.length), chunks, a, b, conf)
   }
 }
 
@@ -136,7 +134,8 @@ function findRangesForChange(chunks: readonly Chunk[], changes: ChangeDesc, isA:
   return ranges
 }
 
-function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], a: Text, b: Text): readonly Chunk[] {
+function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
+                      a: Text, b: Text, conf?: DiffConfig): readonly Chunk[] {
   if (!ranges.length) return chunks
   let chunkI = 0, offA = 0, offB = 0
   let result = []
@@ -150,7 +149,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[], 
       else if (next.fromA + offA > toA) break
       chunkI++
     }
-    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), limit),
+    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), conf),
                                a, b, fromA, fromB))
       result.push(chunk)
     offA += range.diffA

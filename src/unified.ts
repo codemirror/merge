@@ -5,7 +5,7 @@ import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
 import {Chunk} from "./chunk"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
-import {Change} from "./diff"
+import {Change, DiffConfig} from "./diff"
 import {decorateChunks} from "./deco"
 import {baseTheme} from "./theme"
 
@@ -25,6 +25,8 @@ interface UnifiedMergeConfig {
   /// Controls whether accept/reject buttons are displayed for each
   /// changed chunk. Defaults to true.
   mergeControls?: boolean
+  /// Pass options to the diff algorithm.
+  diffConfig?: DiffConfig
 }
 
 const deletedChunkGutterMarker = new class extends GutterMarker {
@@ -43,6 +45,7 @@ const unifiedChangeGutter = Prec.low(gutter({
 /// original text displayed above the new text.
 export function unifiedMergeView(config: UnifiedMergeConfig) {
   let orig = typeof config.original == "string" ? Text.of(config.original.split(/\r?\n/)) : config.original
+  let diffConf = config.diffConfig
   return [
     Prec.low(decorateChunks),
     deletedChunks,
@@ -52,8 +55,8 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
       let updateDoc = tr.effects.find(e => e.is(updateOriginalDoc))
       if (!tr.docChanged && !updateDoc) return null
       let prev = tr.startState.field(ChunkField)
-      let chunks = updateDoc ? Chunk.updateA(prev, updateDoc.value.doc, tr.newDoc, updateDoc.value.changes)
-        : Chunk.updateB(prev, tr.startState.field(originalDoc), tr.newDoc, tr.changes)
+      let chunks = updateDoc ? Chunk.updateA(prev, updateDoc.value.doc, tr.newDoc, updateDoc.value.changes, diffConf)
+        : Chunk.updateB(prev, tr.startState.field(originalDoc), tr.newDoc, tr.changes, diffConf)
       return {effects: setChunks.of(chunks)}
     }),
     mergeConfig.of({
@@ -65,7 +68,7 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
     }),
     originalDoc.init(() => orig),
     config.gutter !== false ? unifiedChangeGutter : [],
-    ChunkField.init(state => Chunk.build(orig, state.doc))
+    ChunkField.init(state => Chunk.build(orig, state.doc, diffConf))
   ]
 }
 
