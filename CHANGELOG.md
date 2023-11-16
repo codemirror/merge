@@ -1,3 +1,9 @@
+## 6.3.0 (2023-11-16)
+
+### New features
+
+Merge views (and `Chunk` building methods) now take an optional diff config object to allow precision to be configured.
+
 ## 6.2.0 (2023-10-06)
 
 ### New features
