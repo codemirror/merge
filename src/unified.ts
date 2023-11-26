@@ -174,7 +174,10 @@ export function acceptChunk(view: EditorView, pos?: number) {
   let orig = view.state.field(originalDoc)
   if (chunk.fromB != chunk.toB && chunk.toA <= orig.length) insert += view.state.lineBreak
   let changes = ChangeSet.of({from: chunk.fromA, to: Math.min(orig.length, chunk.toA), insert}, orig.length)
-  view.dispatch({effects: updateOriginalDoc.of({doc: changes.apply(orig), changes})})
+  view.dispatch({
+    effects: updateOriginalDoc.of({doc: changes.apply(orig), changes}),
+    userEvent: "accept"
+  })
   return true
 }
 
