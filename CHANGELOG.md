@@ -1,3 +1,11 @@
+## 6.3.1 (2023-12-03)
+
+### Bug fixes
+
+Add a `userEvent` annotation to transactions that accept a change in the unified merge view.
+
+Fix CSS selectors in the merge view base theme to avoid affecting the style of non-merge view editors.
+
 ## 6.3.0 (2023-11-16)
 
 ### New features
