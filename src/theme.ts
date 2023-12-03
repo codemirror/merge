@@ -34,7 +34,7 @@ export const externalTheme = EditorView.styleModule.of(new StyleModule({
 }))
 
 export const baseTheme = EditorView.baseTheme({
-  "& .cm-scroller, &": {
+  ".cm-mergeView & .cm-scroller, .cm-mergeView &": {
     height: "auto !important",
     overflowY: "visible !important"
   },
@@ -62,7 +62,7 @@ export const baseTheme = EditorView.baseTheme({
     background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
   },
 
-  "del, ins": {
+  ".cm-insertedLine, .cm-deletedLine": {
     textDecoration: "none"
   },
 

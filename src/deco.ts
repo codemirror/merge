@@ -36,7 +36,8 @@ function configChanged(s1: EditorState, s2: EditorState) {
 
 const changedLine = Decoration.line({class: "cm-changedLine"})
 const changedText = Decoration.mark({class: "cm-changedText"})
-const inserted = Decoration.mark({tagName: "ins"}), deleted = Decoration.mark({tagName: "del"})
+const inserted = Decoration.mark({tagName: "ins", class: "cm-insertedLine"})
+const deleted = Decoration.mark({tagName: "del", class: "cm-deletedLine"})
 
 const changedLineGutterMarker = new class extends GutterMarker {
   elementClass = "cm-changedLineGutter"
