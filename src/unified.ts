@@ -166,7 +166,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
 /// In a [unified](#merge.unifiedMergeView) merge view, accept the
 /// chunk under the given position or the cursor. This chunk will no
 /// longer be highlighted unless it is edited again.
-export function acceptChunk(view: EditorView, pos?: number) {
+export function acceptChunk(view: EditorView, pos?: number, userEvent = 'accept') {
   let {state} = view, at = pos ?? state.selection.main.head
   let chunk = view.state.field(ChunkField).find(ch => ch.fromB <= at && ch.endB >= at)
   if (!chunk) return false
@@ -176,7 +176,7 @@ export function acceptChunk(view: EditorView, pos?: number) {
   let changes = ChangeSet.of({from: chunk.fromA, to: Math.min(orig.length, chunk.toA), insert}, orig.length)
   view.dispatch({
     effects: updateOriginalDoc.of({doc: changes.apply(orig), changes}),
-    userEvent: "accept"
+    userEvent
   })
   return true
 }
@@ -184,7 +184,7 @@ export function acceptChunk(view: EditorView, pos?: number) {
 /// In a [unified](#merge.unifiedMergeView) merge view, reject the
 /// chunk under the given position or the cursor. Reverts that range
 /// to the content it has in the original document.
-export function rejectChunk(view: EditorView, pos?: number) {
+export function rejectChunk(view: EditorView, pos?: number, userEvent = 'revert') {
   let {state} = view, at = pos ?? state.selection.main.head
   let chunk = state.field(ChunkField).find(ch => ch.fromB <= at && ch.endB >= at)
   if (!chunk) return false
@@ -193,7 +193,7 @@ export function rejectChunk(view: EditorView, pos?: number) {
   if (chunk.fromA != chunk.toA && chunk.toB <= state.doc.length) insert += state.lineBreak
   view.dispatch({
     changes: {from: chunk.fromB, to: Math.min(state.doc.length, chunk.toB), insert},
-    userEvent: "revert"
+    userEvent
   })
   return true
 }
