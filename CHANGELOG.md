@@ -1,3 +1,9 @@
+## 6.4.0 (2023-12-14)
+
+### New features
+
+The `getOriginalDoc` function extracts the original document from a unified merge editor.
+
 ## 6.3.1 (2023-12-03)
 
 ### Bug fixes
