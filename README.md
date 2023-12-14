@@ -147,7 +147,7 @@ with a height and <code>overflow: auto</code> to make them scrollable.</p>
 <h3>Unified Merge View</h3>
 <dl>
 <dt id="user-content-unifiedmergeview">
-  <code><strong><a href="#user-content-unifiedmergeview">unifiedMergeView</a></strong>(<a id="user-content-unifiedmergeview^config" href="#user-content-unifiedmergeview^config">config</a>: Object) → ({extension: <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>} | readonly <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>[] | <a href="https://codemirror.net/docs/ref#state.StateField">StateField</a>&lt;<a href="https://codemirror.net/docs/ref#view.DecorationSet">DecorationSet</a>&gt;)[]</code></dt>
+  <code><strong><a href="#user-content-unifiedmergeview">unifiedMergeView</a></strong>(<a id="user-content-unifiedmergeview^config" href="#user-content-unifiedmergeview^config">config</a>: Object) → <a href="https://codemirror.net/docs/ref#state.Extension">Extension</a>[]</code></dt>
 
 <dd><p>Create an extension that causes the editor to display changes
 between its content and the given original document. Changed
@@ -199,6 +199,11 @@ longer be highlighted unless it is edited again.</p>
 <dd><p>In a <a href="#user-content-unifiedmergeview">unified</a> merge view, reject the
 chunk under the given position or the cursor. Reverts that range
 to the content it has in the original document.</p>
+</dd>
+<dt id="user-content-getoriginaldoc">
+  <code><strong><a href="#user-content-getoriginaldoc">getOriginalDoc</a></strong>(<a id="user-content-getoriginaldoc^state" href="#user-content-getoriginaldoc^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>) → <a href="https://codemirror.net/docs/ref#state.Text">Text</a></code></dt>
+
+<dd><p>Get the original document from a unified merge editor's state.</p>
 </dd>
 </dl>
 <h3>Chunks</h3>

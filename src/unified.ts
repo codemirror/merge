@@ -82,6 +82,11 @@ const originalDoc = StateField.define<Text>({
   }
 })
 
+/// Get the original document from a unified merge editor's state.
+export function getOriginalDoc(state: EditorState): Text {
+  return state.field(originalDoc)
+}
+
 const DeletionWidgets: WeakMap<readonly Change[], Decoration> = new WeakMap
 
 class DeletionWidget extends WidgetType {
