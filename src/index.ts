@@ -4,6 +4,6 @@ export {getChunks, goToNextChunk, goToPreviousChunk} from "./merge"
 
 export {MergeConfig, DirectMergeConfig, MergeView} from "./mergeview"
 
-export {unifiedMergeView, acceptChunk, rejectChunk, getOriginalDoc} from "./unified"
+export {unifiedMergeView, acceptChunk, rejectChunk, getOriginalDoc, originalDocChangeEffect} from "./unified"
 
 export {Chunk} from "./chunk"

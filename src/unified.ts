@@ -74,6 +74,12 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
 
 const updateOriginalDoc = StateEffect.define<{doc: Text, changes: ChangeSet}>()
 
+/// Create an effect that, when added to a transaction on a unified
+/// merge view, will update the original document that's being compared against.
+export function originalDocChangeEffect(state: EditorState, changes: ChangeSet): StateEffect<any> {
+  return updateOriginalDoc.of({doc: changes.apply(state.doc), changes})
+}
+
 const originalDoc = StateField.define<Text>({
   create: () => Text.empty,
   update(doc, tr) {

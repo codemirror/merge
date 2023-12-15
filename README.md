@@ -205,6 +205,12 @@ to the content it has in the original document.</p>
 
 <dd><p>Get the original document from a unified merge editor's state.</p>
 </dd>
+<dt id="user-content-originaldocchangeeffect">
+  <code><strong><a href="#user-content-originaldocchangeeffect">originalDocChangeEffect</a></strong>(<a id="user-content-originaldocchangeeffect^state" href="#user-content-originaldocchangeeffect^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>, <a id="user-content-originaldocchangeeffect^changes" href="#user-content-originaldocchangeeffect^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeSet">ChangeSet</a>) → <a href="https://codemirror.net/docs/ref#state.StateEffect">StateEffect</a>&lt;any&gt;</code></dt>
+
+<dd><p>Create an effect that, when added to a transaction on a unified
+merge view, will update the original document that's being compared against.</p>
+</dd>
 </dl>
 <h3>Chunks</h3>
 <dl>
