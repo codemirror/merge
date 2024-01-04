@@ -1,3 +1,9 @@
+## 6.5.0 (2024-01-04)
+
+### New features
+
+The new `changeOriginalDocEffect` function can be used to update the reference document in a unified merge editor.
+
 ## 6.4.0 (2023-12-14)
 
 ### New features
