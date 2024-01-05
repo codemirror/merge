@@ -206,10 +206,16 @@ to the content it has in the original document.</p>
 <dd><p>Get the original document from a unified merge editor's state.</p>
 </dd>
 <dt id="user-content-originaldocchangeeffect">
-  <code><strong><a href="#user-content-originaldocchangeeffect">originalDocChangeEffect</a></strong>(<a id="user-content-originaldocchangeeffect^state" href="#user-content-originaldocchangeeffect^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>, <a id="user-content-originaldocchangeeffect^changes" href="#user-content-originaldocchangeeffect^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeSet">ChangeSet</a>) → <a href="https://codemirror.net/docs/ref#state.StateEffect">StateEffect</a>&lt;any&gt;</code></dt>
+  <code><strong><a href="#user-content-originaldocchangeeffect">originalDocChangeEffect</a></strong>(<a id="user-content-originaldocchangeeffect^state" href="#user-content-originaldocchangeeffect^state">state</a>: <a href="https://codemirror.net/docs/ref#state.EditorState">EditorState</a>, <a id="user-content-originaldocchangeeffect^changes" href="#user-content-originaldocchangeeffect^changes">changes</a>: <a href="https://codemirror.net/docs/ref#state.ChangeSet">ChangeSet</a>) → <a href="https://codemirror.net/docs/ref#state.StateEffect">StateEffect</a>&lt;{doc: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, changes: <a href="https://codemirror.net/docs/ref#state.ChangeSet">ChangeSet</a>}&gt;</code></dt>
 
 <dd><p>Create an effect that, when added to a transaction on a unified
 merge view, will update the original document that's being compared against.</p>
+</dd>
+<dt id="user-content-updateoriginaldoc">
+  <code><strong><a href="#user-content-updateoriginaldoc">updateOriginalDoc</a></strong>: <a href="https://codemirror.net/docs/ref#state.StateEffectType">StateEffectType</a>&lt;{doc: <a href="https://codemirror.net/docs/ref#state.Text">Text</a>, changes: <a href="https://codemirror.net/docs/ref#state.ChangeSet">ChangeSet</a>}&gt;</code></dt>
+
+<dd><p>The state effect used to signal changes in the original doc in a
+unified merge view.</p>
 </dd>
 </dl>
 <h3>Chunks</h3>

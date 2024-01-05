@@ -41,6 +41,8 @@ to communication around the project.
 
 @originalDocChangeEffect
 
+@updateOriginalDoc
+
 ### Chunks
 
 @Chunk
