@@ -77,4 +77,13 @@ describe("chunks", () => {
     let tr = sA.update({changes: {from: 0, insert: sB.doc}})
     ist(Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes).length, 0)
   })
+
+  it("drops old chunks when a doc is cleared", () => {
+    let sA = EditorState.create({doc: "A\nb\nC\nd\nE"}), sB = EditorState.create({doc: "a\nb\nc\nd\ne"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    let tr = sA.update({changes: {from: 0, to: sA.doc.length}})
+    let updated = Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes)
+    ist(updated.length, 1)
+    ist(updated[0].toB, sB.doc.length + 1)
+  })
 })

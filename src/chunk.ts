@@ -154,6 +154,11 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
       result.push(chunk)
     offA += range.diffA
     offB += range.diffB
+    while (chunkI < chunks.length) {
+      let next = chunks[chunkI]
+      if (next.fromA > toA + offA && next.fromB > toB + offB) break
+      chunkI++
+    }
   }
   while (chunkI < chunks.length)
     result.push(chunks[chunkI++].offset(offA, offB))
