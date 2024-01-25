@@ -1,3 +1,13 @@
+## 6.6.0 (2024-01-25)
+
+### Bug fixes
+
+Fix a bug where big deletions could corrupt the merge state.
+
+### New features
+
+The state effect used to change the original document in a unified merge view is now available to client code as `updateOriginalDoc`.
+
 ## 6.5.0 (2024-01-04)
 
 ### New features
