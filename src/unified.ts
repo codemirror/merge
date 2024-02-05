@@ -1,6 +1,6 @@
 import {EditorView, Decoration, DecorationSet, WidgetType, gutter, GutterMarker} from "@codemirror/view"
 import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
-        RangeSet, ChangeSet} from "@codemirror/state"
+        RangeSet, ChangeSet, Transaction} from "@codemirror/state"
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
 import {Chunk} from "./chunk"
@@ -197,7 +197,7 @@ export function acceptChunk(view: EditorView, pos?: number) {
 /// In a [unified](#merge.unifiedMergeView) merge view, reject the
 /// chunk under the given position or the cursor. Reverts that range
 /// to the content it has in the original document.
-export function rejectChunk(view: EditorView, pos?: number) {
+export function rejectChunk(view: EditorView, pos?: number, addToHistory?: boolean) {
   let {state} = view, at = pos ?? state.selection.main.head
   let chunk = state.field(ChunkField).find(ch => ch.fromB <= at && ch.endB >= at)
   if (!chunk) return false
@@ -206,7 +206,8 @@ export function rejectChunk(view: EditorView, pos?: number) {
   if (chunk.fromA != chunk.toA && chunk.toB <= state.doc.length) insert += state.lineBreak
   view.dispatch({
     changes: {from: chunk.fromB, to: Math.min(state.doc.length, chunk.toB), insert},
-    userEvent: "revert"
+    userEvent: "revert",
+    annotations: Transaction.addToHistory.of(addToHistory ?? true)
   })
   return true
 }
