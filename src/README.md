@@ -19,6 +19,10 @@ we have a [code of
 conduct](http://contributor-covenant.org/version/1/1/0/) that applies
 to communication around the project.
 
+## Example
+
+An example is available at [Try CodeMirror](https://codemirror.net/try/?example=Merge%20View).
+
 ## API Reference
 
 ### Side-by-side Merge View
