@@ -86,4 +86,24 @@ describe("chunks", () => {
     ist(updated.length, 1)
     ist(updated[0].toB, sB.doc.length + 1)
   })
+
+  it("works for changes inside changed code", () => {
+    let sA = EditorState.create({doc: "A\nb\nc\nD\nE"}), sB = EditorState.create({doc: "A\nD\nE"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    let tr = sA.update({changes: {from: 3, to: 3, insert: "!"}})
+    let updated = Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes)
+    ist(updated.map(ch => `${ch.fromA}-${ch.toA}/${ch.fromB}-${ch.toB}`).join(" "),
+        "2-7/2-2")
+  })
+
+  it("handles changes that overlap with the start of chunks", () => {
+    let big = "2".repeat(1100)
+    let sA = EditorState.create({doc: [1, 2, 3, big, 5, 6, 7, 8].join("\n")})
+    let sB = EditorState.create({doc: [1, big, 5, 8].join("\n")})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    let tr = sB.update({changes: {from: 2, to: 2, insert: "2\n3\n"}})
+    let updated = Chunk.updateB(chs, sA.doc, tr.newDoc, tr.changes)
+    ist(updated.map(ch => `${ch.fromA}-${ch.toA}/${ch.fromB}-${ch.toB}`).join(" "),
+        "1109-1113/1109-1109")
+  })
 })

@@ -137,30 +137,27 @@ function findRangesForChange(chunks: readonly Chunk[], changes: ChangeDesc, isA:
 function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
                       a: Text, b: Text, conf?: DiffConfig): readonly Chunk[] {
   if (!ranges.length) return chunks
-  let chunkI = 0, offA = 0, offB = 0
   let result = []
-  for (let range of ranges) {
-    let fromA = range.fromA + offA, toA = range.toA + offA + range.diffA
-    let fromB = range.fromB + offB, toB = range.toB + offB + range.diffB
-
+  for (let i = 0, offA = 0, offB = 0, chunkI = 0;; i++) {
+    let range = i == ranges.length ? null : ranges[i]
+    let fromA = range ? range.fromA + offA : a.length, fromB = range ? range.fromB + offB : b.length
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (next.toA + offA <= fromA && next.toB + offB <= fromB) result.push(next.offset(offA, offB))
-      else if (next.fromA + offA > toA) break
+      if (next.toA + offA > fromA || next.toB + offB > fromB) break
+      result.push(next.offset(offA, offB))
       chunkI++
     }
-    for (let chunk of toChunks(presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), conf),
-                               a, b, fromA, fromB))
-      result.push(chunk)
+    if (!range) break
+    let toA = range.toA + offA + range.diffA, toB = range.toB + offB + range.diffB
+    let diff = presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), conf)
+    for (let chunk of toChunks(diff, a, b, fromA, fromB)) result.push(chunk)
     offA += range.diffA
     offB += range.diffB
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (next.fromA > toA + offA && next.fromB > toB + offB) break
+      if (next.fromA + offA > toA && next.fromB + offB > toB) break
       chunkI++
     }
   }
-  while (chunkI < chunks.length)
-    result.push(chunks[chunkI++].offset(offA, offB))
   return result
 }
