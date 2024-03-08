@@ -1,3 +1,9 @@
+## 6.6.1 (2024-03-08)
+
+### Bug fixes
+
+Fix a bug that could cause the set of changed chunks to be updated incorrectly on some types of changes.
+
 ## 6.6.0 (2024-01-25)
 
 ### Bug fixes
