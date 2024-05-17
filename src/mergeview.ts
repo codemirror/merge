@@ -1,6 +1,6 @@
 import {EditorView} from "@codemirror/view"
 import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet} from "@codemirror/state"
-import {Chunk} from "./chunk"
+import {Chunk, defaultDiffConfig} from "./chunk"
 import {DiffConfig} from "./diff"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, changeGutter} from "./deco"
@@ -79,7 +79,7 @@ export class MergeView {
 
   /// Create a new merge view.
   constructor(config: DirectMergeConfig) {
-    this.diffConf = config.diffConfig
+    this.diffConf = config.diffConfig || defaultDiffConfig
 
     let sharedExtensions = [
       Prec.low(decorateChunks),

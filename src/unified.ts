@@ -3,7 +3,7 @@ import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
         RangeSet, ChangeSet} from "@codemirror/state"
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
-import {Chunk} from "./chunk"
+import {Chunk, defaultDiffConfig} from "./chunk"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {Change, DiffConfig} from "./diff"
 import {decorateChunks} from "./deco"
@@ -45,7 +45,7 @@ const unifiedChangeGutter = Prec.low(gutter({
 /// original text displayed above the new text.
 export function unifiedMergeView(config: UnifiedMergeConfig) {
   let orig = typeof config.original == "string" ? Text.of(config.original.split(/\r?\n/)) : config.original
-  let diffConf = config.diffConfig
+  let diffConf = config.diffConfig || defaultDiffConfig
   return [
     Prec.low(decorateChunks),
     deletedChunks,

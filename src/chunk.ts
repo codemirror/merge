@@ -161,3 +161,5 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
   }
   return result
 }
+
+export const defaultDiffConfig = {scanLimit: 500}
