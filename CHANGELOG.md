@@ -1,3 +1,9 @@
+## 6.6.2 (2024-05-17)
+
+### Bug fixes
+
+Restore the default scan limit when diffing for chunks, which looks like it was accidentally dropped when it was made configurable in 6.3.0.
+
 ## 6.6.1 (2024-03-08)
 
 ### Bug fixes
