@@ -1,3 +1,9 @@
+## 6.6.3 (2024-06-07)
+
+### Bug fixes
+
+Fix `originalDocChangeEffect` to apply the changes to the appropriate document.
+
 ## 6.6.2 (2024-05-17)
 
 ### Bug fixes
