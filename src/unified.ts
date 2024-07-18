@@ -131,26 +131,27 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
     let changes = chunk.changes, changeI = 0, inside = false
     function add(from: number, to: number, cls: string) {
       for (let at = from; at < to;) {
-        let nextStop = to, nodeCls = cls + (inside ? " cm-deletedText" : "")
+        let nextStop = to, nodeCls = cls + (inside ? " cm-deletedText" : ""), flip = false
         if (highlightChanges && changeI < changes.length) {
           let nextBound = inside ? changes[changeI].toA : changes[changeI].fromA
           if (nextBound <= nextStop) {
             nextStop = nextBound
             if (inside) changeI++
-            inside = !inside
+            flip = true
           }
         }
         if (nextStop > at) {
           let node = document.createTextNode(text.slice(at, nextStop))
           if (nodeCls) {
-            let span = dom.appendChild(document.createElement("span"))
+            let span = content.appendChild(document.createElement("span"))
             span.className = nodeCls
-            content.appendChild(node)
+            span.appendChild(node)
           } else {
             content.appendChild(node)
           }
         }
         at = nextStop
+        if (flip) inside = !inside
       }
     }
 
