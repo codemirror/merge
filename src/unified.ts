@@ -133,7 +133,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
       for (let at = from; at < to;) {
         let nextStop = to, nodeCls = cls + (inside ? " cm-deletedText" : ""), flip = false
         if (highlightChanges && changeI < changes.length) {
-          let nextBound = inside ? changes[changeI].toA : changes[changeI].fromA
+          let nextBound = Math.max(0, inside ? changes[changeI].toA : changes[changeI].fromA)
           if (nextBound <= nextStop) {
             nextStop = nextBound
             if (inside) changeI++
