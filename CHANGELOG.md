@@ -1,3 +1,9 @@
+## 6.6.5 (2024-07-18)
+
+### Bug fixes
+
+Fix an issue that would corrupt the text displayed for some deleted lines in the unified merge view.
+
 ## 6.6.4 (2024-07-18)
 
 ### Bug fixes
