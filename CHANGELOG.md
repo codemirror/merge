@@ -1,3 +1,9 @@
+## 6.6.4 (2024-07-18)
+
+### Bug fixes
+
+Fix syntax and change highlighting in deleted lines in the unified merge view.
+
 ## 6.6.3 (2024-06-07)
 
 ### Bug fixes
