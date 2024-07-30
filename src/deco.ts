@@ -125,6 +125,18 @@ export const Spacers = StateField.define<DecorationSet>({
 
 const epsilon = .01
 
+function compareSpacers(a: DecorationSet, b: DecorationSet) {
+  if (a.size != b.size) return false
+  let iA = a.iter(), iB = b.iter()
+  while (iA.value) {
+    if (iA.from != iB.from ||
+        Math.abs((iA.value.spec.widget as Spacer).height - (iB.value!.spec.widget as Spacer).height) > 1)
+      return false
+    iA.next(); iB.next()
+  }
+  return true
+}
+
 export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chunk[]) {
   let buildA = new RangeSetBuilder<Decoration>(), buildB = new RangeSetBuilder<Decoration>()
   let spacersA = a.state.field(Spacers).iter(), spacersB = b.state.field(Spacers).iter()
@@ -187,9 +199,9 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
   }
 
   let decoA = buildA.finish(), decoB = buildB.finish()
-  if (!RangeSet.eq([decoA], [a.state.field(Spacers)]))
+  if (!compareSpacers(decoA, a.state.field(Spacers)))
     a.dispatch({effects: adjustSpacers.of(decoA)})
-  if (!RangeSet.eq([decoB], [b.state.field(Spacers)]))
+  if (!compareSpacers(decoB, b.state.field(Spacers)))
     b.dispatch({effects: adjustSpacers.of(decoB)})
 }
 
