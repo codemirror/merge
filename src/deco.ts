@@ -140,24 +140,35 @@ function compareSpacers(a: DecorationSet, b: DecorationSet) {
 export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chunk[]) {
   let buildA = new RangeSetBuilder<Decoration>(), buildB = new RangeSetBuilder<Decoration>()
   let spacersA = a.state.field(Spacers).iter(), spacersB = b.state.field(Spacers).iter()
-  let posA = 0, posB = 0, offA = 0, offB = 0
+  let posA = 0, posB = 0, offA = 0, offB = 0, vpA = a.viewport, vpB = b.viewport
   chunks: for (let chunkI = 0;; chunkI++) {
     let chunk = chunkI < chunks.length ? chunks[chunkI] : null
     // A range at posA/posB is unchanged, must be aligned.
     if (posA < (chunk ? chunk.fromA : a.state.doc.length)) {
-      let heightA = a.lineBlockAt(posA).top + offA
-      let heightB = b.lineBlockAt(posB).top + offB
+      let syncA = posA, syncB = posB
+      // If the viewport starts inside the unchanged range (on both
+      // sides), sync the top of the viewport instead of the start of
+      // the range. That way, big unchanged chunks with possibly
+      // inaccurate estimated heights won't cause the content to
+      // misalign (#1408)
+      if (chunk && syncA < vpA.from && chunk.toA > vpA.from &&
+          syncB < vpB.from && chunk.toB > vpA.from) {
+        let off = Math.min(vpA.from - posA, vpB.from - posB)
+        syncA += off; syncB += off
+      }
+      let heightA = a.lineBlockAt(syncA).top + offA
+      let heightB = b.lineBlockAt(syncB).top + offB
       let diff = heightA - heightB
       if (diff < -epsilon) {
         offA -= diff
-        buildA.add(posA, posA, Decoration.widget({
+        buildA.add(syncA, syncA, Decoration.widget({
           widget: new Spacer(-diff),
           block: true,
           side: -1
         }))
       } else if (diff > epsilon) {
         offB += diff
-        buildB.add(posB, posB, Decoration.widget({
+        buildB.add(syncB, syncB, Decoration.widget({
           widget: new Spacer(diff),
           block: true,
           side: -1
