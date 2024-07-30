@@ -1,3 +1,9 @@
+## 6.6.6 (2024-07-30)
+
+### Bug fixes
+
+Improve vertical alignment of huge unchanged chunks in the side-by-side view.
+
 ## 6.6.5 (2024-07-18)
 
 ### Bug fixes
