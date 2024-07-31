@@ -143,40 +143,41 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
   let posA = 0, posB = 0, offA = 0, offB = 0, vpA = a.viewport, vpB = b.viewport
   chunks: for (let chunkI = 0;; chunkI++) {
     let chunk = chunkI < chunks.length ? chunks[chunkI] : null
+    let endA = chunk ? chunk.fromA : a.state.doc.length, endB = chunk ? chunk.fromB : b.state.doc.length
     // A range at posA/posB is unchanged, must be aligned.
-    if (posA < (chunk ? chunk.fromA : a.state.doc.length)) {
-      let syncA = posA, syncB = posB
-      // If the viewport starts inside the unchanged range (on both
-      // sides), sync the top of the viewport instead of the start of
-      // the range. That way, big unchanged chunks with possibly
-      // inaccurate estimated heights won't cause the content to
-      // misalign (#1408)
-      if (chunk && syncA < vpA.from && chunk.toA > vpA.from &&
-          syncB < vpB.from && chunk.toB > vpA.from) {
-        let off = Math.min(vpA.from - posA, vpB.from - posB)
-        syncA += off; syncB += off
-      }
-      let heightA = a.lineBlockAt(syncA).top + offA
-      let heightB = b.lineBlockAt(syncB).top + offB
+    if (posA < endA) {
+      let heightA = a.lineBlockAt(posA).top + offA
+      let heightB = b.lineBlockAt(posB).top + offB
       let diff = heightA - heightB
       if (diff < -epsilon) {
         offA -= diff
-        buildA.add(syncA, syncA, Decoration.widget({
+        buildA.add(posA, posA, Decoration.widget({
           widget: new Spacer(-diff),
           block: true,
           side: -1
         }))
       } else if (diff > epsilon) {
         offB += diff
-        buildB.add(syncB, syncB, Decoration.widget({
+        buildB.add(posB, posB, Decoration.widget({
           widget: new Spacer(diff),
           block: true,
           side: -1
         }))
       }
     }
-    if (!chunk) break
-    posA = chunk.toA; posB = chunk.toB
+    // If the viewport starts inside the unchanged range (on both
+    // sides), add another sync at the top of the viewport. That way,
+    // big unchanged chunks with possibly inaccurate estimated heights
+    // won't cause the content to misalign (#1408)
+    if (endA > posA + 1000 && posA < vpA.from && endA > vpA.from && posB < vpB.from && endB > vpB.from) {
+      let off = Math.min(vpA.from - posA, vpB.from - posB)
+      posA += off; posB += off
+      chunkI--
+    } else if (!chunk) {
+      break
+    } else {
+      posA = chunk.toA; posB = chunk.toB
+    }
     while (spacersA.value && spacersA.from < posA) {
       offA -= (spacersA.value.spec.widget as Spacer).height
       spacersA.next()
