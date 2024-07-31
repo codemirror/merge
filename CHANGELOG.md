@@ -1,3 +1,9 @@
+## 6.6.7 (2024-07-31)
+
+### Bug fixes
+
+Fix a bug in the way spacers were inserted at the top of the viewport.
+
 ## 6.6.6 (2024-07-30)
 
 ### Bug fixes
