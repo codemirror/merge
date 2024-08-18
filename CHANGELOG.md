@@ -1,3 +1,9 @@
+## 6.7.0 (2024-08-18)
+
+### New features
+
+`unifiedMergeView` now supports the `collapseUnchanged` option the way the split view does.
+
 ## 6.6.7 (2024-07-31)
 
 ### Bug fixes
