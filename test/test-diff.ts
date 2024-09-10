@@ -130,4 +130,8 @@ describe("presentableDiff", () => {
   test("removes small unchanged ranges", "[one->two/a->b]")
 
   test("moves indentation after a change", "x\n[   foo/]\n   bar\n   baz")
+
+  test("aligns insertions to line boundaries", " x,\n[/ y,]\n z,\n")
+
+  test("aligns deletions to line boundaries", " x,\n[ y,/]\n z,\n")
 })

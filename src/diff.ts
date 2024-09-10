@@ -17,7 +17,7 @@ export class Change {
   ) {}
 
   /// @internal
-  offset(offA: number, offB: number) {
+  offset(offA: number, offB: number = offA) {
     return new Change(this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB)
   }
 }
@@ -322,7 +322,6 @@ function makePresentable(changes: Change[], a: string, b: string) {
       if (!lenA || !lenB) {
         let changeLen = Math.max(lenA, lenB)
         let [changeText, changeFrom, changeTo] = lenA ? [a, change.fromA, change.toA] : [b, change.fromB, change.toB]
-        let indentBefore, indentLen
         // An insertion or deletion that falls inside words on both
         // sides can maybe be moved to align with word boundaries.
         if (lenBefore && lenAfter) {
@@ -338,19 +337,33 @@ function makePresentable(changes: Change[], a: string, b: string) {
             boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
           }
           lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
-        // Indentation before the change is repeated at its end. Move it across.
-        } else if (!lenBefore && !lenAfter &&
-                   (indentLen = change.fromA - (indentBefore = findIndentBefore(a, change.fromA, maxScanBefore))) &&
-                   a.slice(indentBefore, change.fromA) == changeText.slice(changeTo - indentLen, changeTo)) {
-          change = changes[i] = new Change(indentBefore, indentBefore + lenA,
-                                           change.fromB - indentLen, change.toB - indentLen)
         }
       }
-      // Grow the change to the word boundaries.
       if (lenBefore || lenAfter) {
         change = changes[i] = new Change(change.fromA - lenBefore, change.toA + lenAfter,
                                          change.fromB - lenBefore, change.toB + lenAfter)
+      } else if (!lenA) {
+        // Align insertion to line boundary, when possible
+        let first = findLineBreakAfter(b, change.fromB, change.toB), len
+        let last = first < 0 ? -1 : findLineBreakBefore(b, change.toB, change.fromB)
+        if (first > -1 && (len = first - change.fromB) <= maxScanAfter &&
+            b.slice(change.fromB, first) == b.slice(change.toB, change.toB + len))
+          change = changes[i] = change.offset(len)
+        else if (last > -1 && (len = change.toB - last) >= maxScanBefore &&
+                 b.slice(change.fromB - len, change.fromB) == b.slice(last, change.toB))
+          change = changes[i] = change.offset(-len)
+      } else if (!lenB) {
+        // Align deletion to line boundary
+        let first = findLineBreakAfter(a, change.fromA, change.toA), len
+        let last = first < 0 ? -1 : findLineBreakBefore(a, change.toA, change.fromA)
+        if (first > -1 && (len = first - change.fromA) <= maxScanAfter &&
+            a.slice(change.fromA, first) == a.slice(change.toA, change.toA + len))
+          change = changes[i] = change.offset(len)
+        else if (last > -1 && (len = change.toA - last) >= maxScanBefore &&
+                 b.slice(change.fromA - len, change.fromA) == b.slice(last, change.toA))
+          change = changes[i] = change.offset(-len)
       }
+      // Grow the change to the word boundaries.
       posA = change.toA
     }
   }
@@ -404,13 +417,14 @@ function findWordBoundaryBefore(s: string, pos: number, max: number) {
   }
 }
 
-function findIndentBefore(s: string, pos: number, max: number) {
-  for (let cur = pos, end = pos - max;;) {
-    let next = cur ? s.charCodeAt(cur - 1) : 10
-    if (next == 10) return cur
-    cur--
-    if (cur < end || (next != 32 && next != 9)) return pos
-  }
+function findLineBreakBefore(s: string, pos: number, stop: number) {
+  for (; pos != stop; pos--) if (s.charCodeAt(pos - 1) == 10) return pos
+  return -1
+}
+
+function findLineBreakAfter(s: string, pos: number, stop: number) {
+  for (; pos != stop; pos++) if (s.charCodeAt(pos) == 10) return pos
+  return -1
 }
 
 const isSurrogate1 = (code: number) => code >= 0xD800 && code <= 0xDBFF
