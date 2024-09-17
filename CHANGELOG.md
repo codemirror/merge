@@ -1,3 +1,9 @@
+## 6.7.1 (2024-09-17)
+
+### Bug fixes
+
+Improve the way `presentableDiff` aligns changes to line boundaries when possible.
+
 ## 6.7.0 (2024-08-18)
 
 ### New features
