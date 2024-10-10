@@ -360,7 +360,7 @@ function makePresentable(changes: Change[], a: string, b: string) {
             a.slice(change.fromA, first) == a.slice(change.toA, change.toA + len))
           change = changes[i] = change.offset(len)
         else if (last > -1 && (len = change.toA - last) >= maxScanBefore &&
-                 b.slice(change.fromA - len, change.fromA) == b.slice(last, change.toA))
+                 a.slice(change.fromA - len, change.fromA) == a.slice(last, change.toA))
           change = changes[i] = change.offset(-len)
       }
       // Grow the change to the word boundaries.
