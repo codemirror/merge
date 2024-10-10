@@ -1,3 +1,9 @@
+## 6.7.2 (2024-10-10)
+
+### Bug fixes
+
+Fix a bug in `presentableDiff` that could cause it to produce corrupted diffs.
+
 ## 6.7.1 (2024-09-17)
 
 ### Bug fixes
