@@ -172,6 +172,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
     } else {
       add(0, text.length, "")
     }
+    if (!text || /\n$/.test(text)) dom.appendChild(document.createElement("br"))
     return dom
   }
   let deco = Decoration.widget({
