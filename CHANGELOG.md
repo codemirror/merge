@@ -1,3 +1,9 @@
+## 6.7.3 (2024-11-05)
+
+### Bug fixes
+
+Fix an issue where the last line of a deleted chunk, if there is no text on it, was collapsed by the browser and not visible.
+
 ## 6.7.2 (2024-10-10)
 
 ### Bug fixes
