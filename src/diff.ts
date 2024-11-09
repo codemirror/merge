@@ -349,7 +349,7 @@ function makePresentable(changes: Change[], a: string, b: string) {
         if (first > -1 && (len = first - change.fromB) <= maxScanAfter &&
             b.slice(change.fromB, first) == b.slice(change.toB, change.toB + len))
           change = changes[i] = change.offset(len)
-        else if (last > -1 && (len = change.toB - last) >= maxScanBefore &&
+        else if (last > -1 && (len = change.toB - last) <= maxScanBefore &&
                  b.slice(change.fromB - len, change.fromB) == b.slice(last, change.toB))
           change = changes[i] = change.offset(-len)
       } else if (!lenB) {
@@ -359,7 +359,7 @@ function makePresentable(changes: Change[], a: string, b: string) {
         if (first > -1 && (len = first - change.fromA) <= maxScanAfter &&
             a.slice(change.fromA, first) == a.slice(change.toA, change.toA + len))
           change = changes[i] = change.offset(len)
-        else if (last > -1 && (len = change.toA - last) >= maxScanBefore &&
+        else if (last > -1 && (len = change.toA - last) <= maxScanBefore &&
                  a.slice(change.fromA - len, change.fromA) == a.slice(last, change.toA))
           change = changes[i] = change.offset(-len)
       }
