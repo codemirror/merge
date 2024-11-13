@@ -1,3 +1,11 @@
+## 6.7.4 (2024-11-13)
+
+### Bug fixes
+
+In the unified diff view, fix an issue where empty deleted lines were rendered for chunks that deleted nothing.
+
+Fix a bug that made the diff algorithm miss some obvious opportunities to align changes on line boundaries.
+
 ## 6.7.3 (2024-11-05)
 
 ### Bug fixes
