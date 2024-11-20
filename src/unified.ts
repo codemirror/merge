@@ -172,7 +172,8 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
     } else {
       add(0, text.length, "")
     }
-    if (/\n$/.test(text)) dom.appendChild(document.createElement("br"))
+    if (chunk.fromA < chunk.toA && (/\n$/.test(text) || !text))
+      dom.appendChild(document.createElement("br"))
     return dom
   }
   let deco = Decoration.widget({
@@ -221,7 +222,7 @@ export function rejectChunk(view: EditorView, pos?: number) {
 
 function buildDeletedChunks(state: EditorState) {
   let builder = new RangeSetBuilder<Decoration>()
-  for (let ch of state.field(ChunkField)) if (ch.fromA < ch.toA)
+  for (let ch of state.field(ChunkField))
     builder.add(ch.fromB, ch.fromB, deletionWidget(state, ch))
   return builder.finish()
 }
