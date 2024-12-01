@@ -229,7 +229,7 @@ class CollapseWidget extends WidgetType {
   toDOM(view: EditorView) {
     let outer = document.createElement("div")
     outer.className = "cm-collapsedLines"
-    outer.textContent = "⦚ " + view.state.phrase("$ unchanged lines", this.lines) + " ⦚"
+    outer.textContent = view.state.phrase("$ unchanged lines", this.lines)
     outer.addEventListener("click", e => {
       let pos = view.posAtDOM(e.target as HTMLElement)
       view.dispatch({effects: uncollapse.of(pos)})

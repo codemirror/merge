@@ -85,7 +85,15 @@ export const baseTheme = EditorView.baseTheme({
 
   ".cm-collapsedLines": {
     padding: "5px 5px 5px 10px",
-    cursor: "pointer"
+    cursor: "pointer",
+    "&:before": {
+      content: '"⦚"',
+      marginInlineEnd: "7px"
+    },
+    "&:after": {
+      content: '"⦚"',
+      marginInlineStart: "7px"
+    },
   },
   "&light .cm-collapsedLines": {
     color: "#444",
