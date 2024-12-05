@@ -132,12 +132,26 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
       reject.textContent = state.phrase("Reject")
       reject.onmousedown = e => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)) }
     }
+    if (chunk.fromA >= chunk.toA) return dom
 
-    let content = dom.appendChild(document.createElement("del"))
+    let line: HTMLElement = makeLine()
     let changes = chunk.changes, changeI = 0, inside = false
+    function makeLine() {
+      let div = dom.appendChild(document.createElement("div"))
+      div.className = "cm-deletedLine"
+      return div.appendChild(document.createElement("del"))
+    }
     function add(from: number, to: number, cls: string) {
       for (let at = from; at < to;) {
+        if (text.charAt(at) == "\n") {
+          if (!line.firstChild) line.appendChild(document.createElement("br"))
+          line = makeLine()
+          at++
+          continue
+        }
         let nextStop = to, nodeCls = cls + (inside ? " cm-deletedText" : ""), flip = false
+        let newline = text.indexOf("\n", at)
+        if (newline > -1 && newline < to) nextStop = newline
         if (highlightChanges && changeI < changes.length) {
           let nextBound = Math.max(0, inside ? changes[changeI].toA : changes[changeI].fromA)
           if (nextBound <= nextStop) {
@@ -149,14 +163,14 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
         if (nextStop > at) {
           let node = document.createTextNode(text.slice(at, nextStop))
           if (nodeCls) {
-            let span = content.appendChild(document.createElement("span"))
+            let span = line.appendChild(document.createElement("span"))
             span.className = nodeCls
             span.appendChild(node)
           } else {
-            content.appendChild(node)
+            line.appendChild(node)
           }
+          at = nextStop
         }
-        at = nextStop
         if (flip) inside = !inside
       }
     }
@@ -172,8 +186,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
     } else {
       add(0, text.length, "")
     }
-    if (chunk.fromA < chunk.toA && (/\n$/.test(text) || !text))
-      dom.appendChild(document.createElement("br"))
+    if (!line.firstChild) line.appendChild(document.createElement("br"))
     return dom
   }
   let deco = Decoration.widget({
