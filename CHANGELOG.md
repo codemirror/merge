@@ -1,3 +1,13 @@
+## 6.7.5 (2024-12-17)
+
+### Bug fixes
+
+Fix a bug that hid the accept/reject buttons for insertions in the unified merge view.
+
+The lines shown around collapsed unchanged lines are now css `:before`/`:after` elements, so that they can be customized more easily.
+
+Render deleted lines in the unified merge view as block elements, for easier styling.
+
 ## 6.7.4 (2024-11-13)
 
 ### Bug fixes
