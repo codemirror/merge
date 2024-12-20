@@ -28,7 +28,8 @@ interface UnifiedMergeConfig {
   /// Controls whether accept/reject buttons are displayed for each
   /// changed chunk. Defaults to true.
   mergeControls?: boolean
-  /// Pass options to the diff algorithm.
+  /// Pass options to the diff algorithm. By default, the merge view
+  /// sets [`scanLimit`](#merge.DiffConfig.scanLimit) to 500.
   diffConfig?: DiffConfig
   /// When given, long stretches of unchanged text are collapsed.
   /// `margin` gives the number of lines to leave visible after/before

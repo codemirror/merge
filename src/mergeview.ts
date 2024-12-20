@@ -28,7 +28,8 @@ export interface MergeConfig {
   /// a change (default is 3), and `minSize` gives the minimum amount
   /// of collapsible lines that need to be present (defaults to 4).
   collapseUnchanged?: {margin?: number, minSize?: number},
-  /// Pass options to the diff algorithm.
+  /// Pass options to the diff algorithm. By default, the merge view
+  /// sets [`scanLimit`](#merge.DiffConfig.scanLimit) to 500.
   diffConfig?: DiffConfig
 }
 
