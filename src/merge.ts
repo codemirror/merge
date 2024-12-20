@@ -7,6 +7,7 @@ type Config = {
   highlightChanges: boolean,
   markGutter: boolean,
   syntaxHighlightDeletions?: boolean,
+  syntaxHighlightDeletionsMaxLength?: number,
   mergeControls?: boolean,
   side: "a" | "b"
 }

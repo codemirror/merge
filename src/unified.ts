@@ -22,6 +22,9 @@ interface UnifiedMergeConfig {
   /// documents, this doesn't always work well. Set this option to
   /// false to disable syntax highlighting for deleted lines.
   syntaxHighlightDeletions?: boolean
+  /// Deleted blocks larger than this size do not get
+  /// syntax-highlighted. Defaults to 3000.
+  syntaxHighlightDeletionsMaxLength?: number
   /// Controls whether accept/reject buttons are displayed for each
   /// changed chunk. Defaults to true.
   mergeControls?: boolean
@@ -68,6 +71,7 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
       highlightChanges: config.highlightChanges !== false,
       markGutter: config.gutter !== false,
       syntaxHighlightDeletions: config.syntaxHighlightDeletions !== false,
+      syntaxHighlightDeletionsMaxLength: 3000,
       mergeControls: config.mergeControls !== false,
       side: "b"
     }),
@@ -115,7 +119,8 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
   if (known) return known
 
   let buildDOM = (view: EditorView) => {
-    let {highlightChanges, syntaxHighlightDeletions, mergeControls} = state.facet(mergeConfig)
+    let {highlightChanges, syntaxHighlightDeletions, syntaxHighlightDeletionsMaxLength, mergeControls} =
+      state.facet(mergeConfig)
     let text = view.state.field(originalDoc).sliceString(chunk.fromA, chunk.endA)
     let lang = syntaxHighlightDeletions && state.facet(language)
     let dom = document.createElement("div")
@@ -175,7 +180,7 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
       }
     }
 
-    if (lang) {
+    if (lang && chunk.toA - chunk.fromA <= syntaxHighlightDeletionsMaxLength!) {
       let tree = lang.parser.parse(text), pos = 0
       highlightTree(tree, {style: tags => highlightingFor(state, tags)}, (from, to, cls) => {
         if (from > pos) add(pos, from, "")
