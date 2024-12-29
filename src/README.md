@@ -33,6 +33,8 @@ An example is available at [Try CodeMirror](https://codemirror.net/try/?example=
 
 @MergeView
 
+@uncollapseUnchanged
+
 ### Unified Merge View
 
 @unifiedMergeView

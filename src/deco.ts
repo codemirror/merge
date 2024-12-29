@@ -217,7 +217,9 @@ export function updateSpacers(a: EditorView, b: EditorView, chunks: readonly Chu
     b.dispatch({effects: adjustSpacers.of(decoB)})
 }
 
-const uncollapse = StateEffect.define<number>({
+/// A state effect that expands the section of collapsed unchanged
+/// code starting at the given position.
+export const uncollapseUnchanged = StateEffect.define<number>({
   map: (value, change) => change.mapPos(value)
 })
 
@@ -232,9 +234,9 @@ class CollapseWidget extends WidgetType {
     outer.textContent = view.state.phrase("$ unchanged lines", this.lines)
     outer.addEventListener("click", e => {
       let pos = view.posAtDOM(e.target as HTMLElement)
-      view.dispatch({effects: uncollapse.of(pos)})
+      view.dispatch({effects: uncollapseUnchanged.of(pos)})
       let {side, sibling} = view.state.facet(mergeConfig)
-      if (sibling) sibling().dispatch({effects: uncollapse.of(mapPos(pos, view.state.field(ChunkField), side == "a"))})
+      if (sibling) sibling().dispatch({effects: uncollapseUnchanged.of(mapPos(pos, view.state.field(ChunkField), side == "a"))})
     })
     return outer
   }
@@ -242,6 +244,8 @@ class CollapseWidget extends WidgetType {
   ignoreEvent(e: Event) { return e instanceof MouseEvent }
 
   get estimatedHeight() { return 27 }
+
+  get type() { return "collapsed-unchanged-code" }
 }
 
 function mapPos(pos: number, chunks: readonly Chunk[], isA: boolean) {
@@ -257,7 +261,7 @@ const CollapsedRanges = StateField.define<DecorationSet>({
   create(state) { return Decoration.none },
   update(deco, tr) {
     deco = deco.map(tr.changes)
-    for (let e of tr.effects) if (e.is(uncollapse))
+    for (let e of tr.effects) if (e.is(uncollapseUnchanged))
       deco = deco.update({filter: from => from != e.value})
     return deco
   },
