@@ -1,3 +1,15 @@
+## 6.8.0 (2024-12-30)
+
+### Bug fixes
+
+Limit the size of highlighted chunks in the unified view, to prevent freezing the interface highlighting huge amounts of code.
+
+Fix a regression that caused deleted chunks in the unified view to be rendered with strike-through style by default.
+
+### New features
+
+Export the `uncollapseUnchanged` effect that is used to uncollapse sections of code.
+
 ## 6.7.5 (2024-12-17)
 
 ### Bug fixes
