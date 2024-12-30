@@ -19,9 +19,55 @@ we have a [code of
 conduct](http://contributor-covenant.org/version/1/1/0/) that applies
 to communication around the project.
 
-## Example
+## Usage
 
-An example is available at [Try CodeMirror](https://codemirror.net/try/?example=Merge%20View).
+A split merge view can be created like this:
+
+```javascript
+import {MergeView} from "@codemirror/merge"
+import {EditorView, basicSetup} from "codemirror"
+import {EditorState} from "@codemirror/state"
+
+let doc = `one
+two
+three
+four
+five`
+
+const view = new MergeView({
+  a: {
+    doc,
+    extensions: basicSetup
+  },
+  b: {
+    doc: doc.replace(/t/g, "T") + "\nSix",
+    extensions: [
+      basicSetup,
+      EditorView.editable.of(false),
+      EditorState.readOnly.of(true)
+    ]
+  },
+  parent: document.body
+})
+```
+
+Or a unified view like this:
+
+```javascript
+import {EditorView, basicSetup} from "codemirror"
+import {unifiedMergeView} from "@codemirror/merge"
+
+const view = new EditorView({
+  parent: document.body,
+  doc: "one\ntwo\nthree\nfour",
+  extensions: [
+    basicSetup,
+    unifiedMergeView({
+      original: "one\n...\nfour"
+    })
+  ]
+})
+```
 
 ## API Reference
 
@@ -70,7 +116,8 @@ of collapsible lines that need to be present (defaults to 4).</p>
 </dd><dt id="user-content-mergeconfig.diffconfig">
   <code><strong><a href="#user-content-mergeconfig.diffconfig">diffConfig</a></strong>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a></code></dt>
 
-<dd><p>Pass options to the diff algorithm.</p>
+<dd><p>Pass options to the diff algorithm. By default, the merge view
+sets <a href="#user-content-diffconfig.scanlimit"><code>scanLimit</code></a> to 500.</p>
 </dd></dl>
 
 </dd>
@@ -147,6 +194,12 @@ with a height and <code>overflow: auto</code> to make them scrollable.</p>
 </dd></dl>
 
 </dd>
+<dt id="user-content-uncollapseunchanged">
+  <code><strong><a href="#user-content-uncollapseunchanged">uncollapseUnchanged</a></strong>: <a href="https://codemirror.net/docs/ref#state.StateEffectType">StateEffectType</a>&lt;<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>&gt;</code></dt>
+
+<dd><p>A state effect that expands the section of collapsed unchanged
+code starting at the given position.</p>
+</dd>
 </dl>
 <h3>Unified Merge View</h3>
 <dl>
@@ -180,6 +233,11 @@ in changed chunks. Set this to false to turn that off.</p>
 editor's language. Since these are just fragments, not full
 documents, this doesn't always work well. Set this option to
 false to disable syntax highlighting for deleted lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.syntaxhighlightdeletionsmaxlength">
+  <code><strong><a href="#user-content-unifiedmergeview^config.syntaxhighlightdeletionsmaxlength">syntaxHighlightDeletionsMaxLength</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
+
+<dd><p>Deleted blocks larger than this size do not get
+syntax-highlighted. Defaults to 3000.</p>
 </dd><dt id="user-content-unifiedmergeview^config.mergecontrols">
   <code><strong><a href="#user-content-unifiedmergeview^config.mergecontrols">mergeControls</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
 
@@ -188,7 +246,15 @@ changed chunk. Defaults to true.</p>
 </dd><dt id="user-content-unifiedmergeview^config.diffconfig">
   <code><strong><a href="#user-content-unifiedmergeview^config.diffconfig">diffConfig</a></strong>&#8288;?: <a href="#user-content-diffconfig">DiffConfig</a></code></dt>
 
-<dd><p>Pass options to the diff algorithm.</p>
+<dd><p>Pass options to the diff algorithm. By default, the merge view
+sets <a href="#user-content-diffconfig.scanlimit"><code>scanLimit</code></a> to 500.</p>
+</dd><dt id="user-content-unifiedmergeview^config.collapseunchanged">
+  <code><strong><a href="#user-content-unifiedmergeview^config.collapseunchanged">collapseUnchanged</a></strong>&#8288;?: {margin&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, minSize&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>}</code></dt>
+
+<dd><p>When given, long stretches of unchanged text are collapsed.
+<code>margin</code> gives the number of lines to leave visible after/before
+a change (default is 3), and <code>minSize</code> gives the minimum amount
+of collapsible lines that need to be present (defaults to 4).</p>
 </dd></dl></dd></dl></dd>
 <dt id="user-content-acceptchunk">
   <code><strong><a href="#user-content-acceptchunk">acceptChunk</a></strong>(<a id="user-content-acceptchunk^view" href="#user-content-acceptchunk^view">view</a>: <a href="https://codemirror.net/docs/ref#view.EditorView">EditorView</a>, <a id="user-content-acceptchunk^pos" href="#user-content-acceptchunk^pos">pos</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>) → <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>

@@ -19,9 +19,55 @@ we have a [code of
 conduct](http://contributor-covenant.org/version/1/1/0/) that applies
 to communication around the project.
 
-## Example
+## Usage
 
-An example is available at [Try CodeMirror](https://codemirror.net/try/?example=Merge%20View).
+A split merge view can be created like this:
+
+```javascript
+import {MergeView} from "@codemirror/merge"
+import {EditorView, basicSetup} from "codemirror"
+import {EditorState} from "@codemirror/state"
+
+let doc = `one
+two
+three
+four
+five`
+
+const view = new MergeView({
+  a: {
+    doc,
+    extensions: basicSetup
+  },
+  b: {
+    doc: doc.replace(/t/g, "T") + "\nSix",
+    extensions: [
+      basicSetup,
+      EditorView.editable.of(false),
+      EditorState.readOnly.of(true)
+    ]
+  },
+  parent: document.body
+})
+```
+
+Or a unified view like this:
+
+```javascript
+import {EditorView, basicSetup} from "codemirror"
+import {unifiedMergeView} from "@codemirror/merge"
+
+const view = new EditorView({
+  parent: document.body,
+  doc: "one\ntwo\nthree\nfour",
+  extensions: [
+    basicSetup,
+    unifiedMergeView({
+      original: "one\n...\nfour"
+    })
+  ]
+})
+```
 
 ## API Reference
 
