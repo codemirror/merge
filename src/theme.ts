@@ -62,7 +62,7 @@ export const baseTheme = EditorView.baseTheme({
     background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
   },
 
-  ".cm-insertedLine, .cm-deletedLine": {
+  ".cm-insertedLine, .cm-deletedLine, .cm-deletedLine del": {
     textDecoration: "none"
   },
 
