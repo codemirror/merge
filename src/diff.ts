@@ -465,7 +465,7 @@ export function diff(a: string, b: string, config?: DiffConfig): readonly Change
 }
 
 // Return whether the last diff fell back to the imprecise algorithm.
-export function diffIsImprecise() { return crude }
+export function diffIsPrecise() { return !crude }
 
 /// Compute the difference between the given strings, and clean up the
 /// resulting diff for presentation to users by dropping short

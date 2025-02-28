@@ -106,4 +106,18 @@ describe("chunks", () => {
     ist(updated.map(ch => `${ch.fromA}-${ch.toA}/${ch.fromB}-${ch.toB}`).join(" "),
         "1109-1113/1109-1109")
   })
+
+  it("tracks chunk precision", () => {
+    let head = "---\n".repeat(500)
+    let sA = EditorState.create({doc: head + "a\n".repeat(1000)})
+    let sB = EditorState.create({doc: "///" + head + "b\n"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    ist(chs.length, 2)
+    ist(chs.every(ch => ch.precise))
+    let tr = sB.update({changes: {from: sB.doc.length, insert: "b\n".repeat(999)}})
+    let updated = Chunk.updateB(chs, sA.doc, tr.newDoc, tr.changes, {scanLimit: 100})
+    ist(updated.length, 2)
+    ist(updated[0].precise)
+    ist(!updated[1].precise)
+  })
 })

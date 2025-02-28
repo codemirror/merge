@@ -1,5 +1,5 @@
 import {Text, ChangeDesc} from "@codemirror/state"
-import {Change, presentableDiff, DiffConfig} from "./diff"
+import {Change, presentableDiff, DiffConfig, diffIsPrecise} from "./diff"
 
 /// A chunk describes a range of lines which have changed content in
 /// them. Either side (a/b) may either be empty (when its `to` is
@@ -24,12 +24,15 @@ export class Chunk {
     readonly fromB: number,
     /// The end of the chunk in document A.
     readonly toB: number,
+    /// This is set to false when the diff used to compute this chunk
+    /// fell back to fast, imprecise diffing.
+    readonly precise = true
   ) {}
 
   /// @internal
   offset(offA: number, offB: number) {
     return offA || offB
-      ? new Chunk(this.changes, this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB)
+      ? new Chunk(this.changes, this.fromA + offA, this.toA + offA, this.fromB + offB, this.toB + offB, this.precise)
       : this
   }
 
@@ -42,7 +45,8 @@ export class Chunk {
 
   /// Build a set of changed chunks for the given documents.
   static build(a: Text, b: Text, conf?: DiffConfig): readonly Chunk[] {
-    return toChunks(presentableDiff(a.toString(), b.toString(), conf), a, b, 0, 0)
+    let diff = presentableDiff(a.toString(), b.toString(), conf)
+    return toChunks(diff, a, b, 0, 0, diffIsPrecise())
   }
 
   /// Update a set of chunks for changes in document A. `a` should
@@ -68,7 +72,7 @@ function toLine(toA: number, toB: number, a: Text, b: Text) {
   return lineA.from == toA && lineB.from == toB ? [toA, toB] : [lineA.to + 1, lineB.to + 1]
 }
 
-function toChunks(changes: readonly Change[], a: Text, b: Text, offA: number, offB: number) {
+function toChunks(changes: readonly Change[], a: Text, b: Text, offA: number, offB: number, precise: boolean) {
   let chunks = []
   for (let i = 0; i < changes.length; i++) {
     let change = changes[i]
@@ -83,7 +87,7 @@ function toChunks(changes: readonly Change[], a: Text, b: Text, offA: number, of
       ;[toA, toB] = toLine(next.toA + offA, next.toB + offB, a, b)
       i++
     }
-    chunks.push(new Chunk(chunk, fromA, Math.max(fromA, toA), fromB, Math.max(fromB, toB)))
+    chunks.push(new Chunk(chunk, fromA, Math.max(fromA, toA), fromB, Math.max(fromB, toB), precise))
   }
   return chunks
 }
@@ -150,7 +154,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
     if (!range) break
     let toA = range.toA + offA + range.diffA, toB = range.toB + offB + range.diffB
     let diff = presentableDiff(a.sliceString(fromA, toA), b.sliceString(fromB, toB), conf)
-    for (let chunk of toChunks(diff, a, b, fromA, fromB)) result.push(chunk)
+    for (let chunk of toChunks(diff, a, b, fromA, fromB, diffIsPrecise())) result.push(chunk)
     offA += range.diffA
     offB += range.diffB
     while (chunkI < chunks.length) {
