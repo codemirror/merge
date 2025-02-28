@@ -69,11 +69,14 @@ function findDiff(a: string, fromA: number, toA: number, b: string, fromB: numbe
 }
 
 let scanLimit = 1e9
+let timeout = 0
+let crude = false
 
 // Implementation of Myers 1986 "An O(ND) Difference Algorithm and Its Variations"
 function findSnake(a: string, fromA: number, toA: number, b: string, fromB: number, toB: number): Change[] {
   let lenA = toA - fromA, lenB = toB - fromB
-  if (scanLimit < 1e9 && Math.min(lenA, lenB) > scanLimit * 16) {
+  if (scanLimit < 1e9 && Math.min(lenA, lenB) > scanLimit * 16 ||
+      timeout > 0 && Date.now() > timeout) {
     if (Math.min(lenA, lenB) > scanLimit * 64) return [new Change(fromA, toA, fromB, toB)]
     return crudeMatch(a, fromA, toA, b, fromB, toB)
   }
@@ -84,7 +87,8 @@ function findSnake(a: string, fromA: number, toA: number, b: string, fromB: numb
   let match2 = (x: number, y: number) => a.charCodeAt(toA - x - 1) == b.charCodeAt(toB - y - 1)
   let test1 = (lenA - lenB) % 2 != 0 ? frontier2 : null, test2 = test1 ? null : frontier1
   for (let depth = 0; depth < off; depth++) {
-    if (depth > scanLimit) return crudeMatch(a, fromA, toA, b, fromB, toB)
+    if (depth > scanLimit || timeout > 0 && !(depth & 63) && Date.now() > timeout)
+      return crudeMatch(a, fromA, toA, b, fromB, toB)
     let done = frontier1.advance(depth, lenA, lenB, off, test1, false, match1) ||
       frontier2.advance(depth, lenA, lenB, off, test2, true, match2)
     if (done) return bisect(a, fromA, toA, fromA + done[0], b, fromB, toB, fromB + done[1])
@@ -244,6 +248,7 @@ function halfMatch(
 function crudeMatch(
   a: string, fromA: number, toA: number, b: string, fromB: number, toB: number
 ): Change[] {
+  crude = true
   let lenA = toA - fromA, lenB = toB - fromB
   let result
   if (lenA < lenB) {
@@ -444,13 +449,23 @@ export interface DiffConfig {
   /// changed characters in a scanned range. This should help avoid
   /// quadratic running time on large, very different inputs.
   scanLimit?: number
+  /// When set, this makes the algorithm periodically check how long
+  /// it has been running, and if it has taken more than the given
+  /// number of milliseconds, it aborts detailed diffing in falls back
+  /// to the imprecise algorithm.
+  timeout?: number
 }
 
 /// Compute the difference between two strings.
 export function diff(a: string, b: string, config?: DiffConfig): readonly Change[] {
   scanLimit = (config?.scanLimit ?? 1e9) >> 1
+  timeout = config?.timeout ? Date.now() + config.timeout : 0
+  crude = false
   return normalize(a, b, findDiff(a, 0, a.length, b, 0, b.length))
 }
+
+// Return whether the last diff fell back to the imprecise algorithm.
+export function diffIsImprecise() { return crude }
 
 /// Compute the difference between the given strings, and clean up the
 /// resulting diff for presentation to users by dropping short

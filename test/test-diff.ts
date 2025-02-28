@@ -88,6 +88,18 @@ describe("diff", () => {
       ist(apply(d, a, b), b)
     }
   })
+
+  it("can limit scan depth", () => {
+    let t0 = Date.now()
+    diff("a".repeat(10000), "b".repeat(10000), {scanLimit: 500})
+    ist(Date.now() < t0 + 100)
+  })
+
+  it("can time out diffs", () => {
+    let t0 = Date.now()
+    diff("a".repeat(10000), "b".repeat(10000), {timeout: 50})
+    ist(Date.now() < t0 + 100)
+  })
 })
 
 function parseDiff(d: string) {
