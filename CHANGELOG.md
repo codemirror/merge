@@ -1,3 +1,11 @@
+## 6.9.0 (2025-03-03)
+
+### New features
+
+The new diff option `timeout` can be used to make the algorithm bail out after a given amount of milliseconds.
+
+Chunks now have a `precise` property that is false when the diff that the chunk is based on fell back to imprecise diffing (because of a scan depth limit or timeout).
+
 ## 6.8.0 (2024-12-30)
 
 ### Bug fixes
