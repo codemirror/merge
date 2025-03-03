@@ -304,7 +304,7 @@ line. Note that <code>to</code> positions may point past the end of the
 document. Use <code>endA</code>/<code>endB</code> if you need an end position that is
 certain to be a valid document position.</p>
 <dl><dt id="user-content-chunk.constructor">
-  <code>new <strong><a href="#user-content-chunk.constructor">Chunk</a></strong>(<a id="user-content-chunk.constructor^changes" href="#user-content-chunk.constructor^changes">changes</a>: readonly <a href="#user-content-change">Change</a>[], <a id="user-content-chunk.constructor^froma" href="#user-content-chunk.constructor^froma">fromA</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^toa" href="#user-content-chunk.constructor^toa">toA</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^fromb" href="#user-content-chunk.constructor^fromb">fromB</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^tob" href="#user-content-chunk.constructor^tob">toB</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code></dt>
+  <code>new <strong><a href="#user-content-chunk.constructor">Chunk</a></strong>(<a id="user-content-chunk.constructor^changes" href="#user-content-chunk.constructor^changes">changes</a>: readonly <a href="#user-content-change">Change</a>[], <a id="user-content-chunk.constructor^froma" href="#user-content-chunk.constructor^froma">fromA</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^toa" href="#user-content-chunk.constructor^toa">toA</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^fromb" href="#user-content-chunk.constructor^fromb">fromB</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^tob" href="#user-content-chunk.constructor^tob">toB</a>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>, <a id="user-content-chunk.constructor^precise" href="#user-content-chunk.constructor^precise">precise</a>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a> = true)</code></dt>
 
 <dd></dd><dt id="user-content-chunk.changes">
   <code><strong><a href="#user-content-chunk.changes">changes</a></strong>: readonly <a href="#user-content-change">Change</a>[]</code></dt>
@@ -330,6 +330,11 @@ past the end of the last line in the chunk if it does.</p>
   <code><strong><a href="#user-content-chunk.tob">toB</a></strong>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
 
 <dd><p>The end of the chunk in document A.</p>
+</dd><dt id="user-content-chunk.precise">
+  <code><strong><a href="#user-content-chunk.precise">precise</a></strong>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>This is set to false when the diff used to compute this chunk
+fell back to fast, imprecise diffing.</p>
 </dd><dt id="user-content-chunk.enda">
   <code><strong><a href="#user-content-chunk.enda">endA</a></strong>: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
 
@@ -436,6 +441,13 @@ computations, causing them to give up and fall back to a faster
 but less precise approach when there is more than this many
 changed characters in a scanned range. This should help avoid
 quadratic running time on large, very different inputs.</p>
+</dd><dt id="user-content-diffconfig.timeout">
+  <code><strong><a href="#user-content-diffconfig.timeout">timeout</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
+
+<dd><p>When set, this makes the algorithm periodically check how long
+it has been running, and if it has taken more than the given
+number of milliseconds, it aborts detailed diffing in falls back
+to the imprecise algorithm.</p>
 </dd></dl>
 
 </dd>
