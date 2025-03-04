@@ -267,8 +267,8 @@ function chunkCanDisplayInline(state: EditorState, chunk: Chunk): readonly Range
 
   result = null
   let a = state.field(originalDoc), b = state.doc
-  let linesA = a.lineAt(chunk.toA).number - a.lineAt(chunk.fromA).number
-  let linesB = b.lineAt(chunk.toB).number - b.lineAt(chunk.fromB).number
+  let linesA = a.lineAt(chunk.endA).number - a.lineAt(chunk.fromA).number + 1
+  let linesB = b.lineAt(chunk.endB).number - b.lineAt(chunk.fromB).number + 1
   abort: if (linesA == linesB && linesA < 10) {
     let deco: Range<Decoration>[] = [], deleteCount = 0
     let bA = chunk.fromA, bB = chunk.fromB
@@ -283,7 +283,7 @@ function chunkCanDisplayInline(state: EditorState, chunk: Chunk): readonly Range
         deco.push(Decoration.widget({widget: new InlineDeletion(deleted), side: 1}).range(bB + ch.toB))
       }
     }
-    if (deleteCount < (chunk.toA - chunk.fromA - linesA * 2)) result = deco
+    if (deleteCount < (chunk.endA - chunk.fromA - linesA * 2)) result = deco
   }
 
   InlineChunkCache.set(chunk, result)
@@ -319,7 +319,7 @@ function overrideChunkInline(
   if (gutterBuilder) {
     for (let line = state.doc.lineAt(chunk.fromB);;) {
       gutterBuilder.add(line.from, line.from, inlineChangedLineGutterMarker)
-      if (line.to >= chunk.toB - 1) break
+      if (line.to >= chunk.endB) break
       line = state.doc.lineAt(line.to + 1)
     }
   }
