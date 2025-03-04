@@ -35,7 +35,7 @@ function configChanged(s1: EditorState, s2: EditorState) {
 }
 
 const changedLine = Decoration.line({class: "cm-changedLine"})
-const changedText = Decoration.mark({class: "cm-changedText"})
+export const changedText = Decoration.mark({class: "cm-changedText"})
 const inserted = Decoration.mark({tagName: "ins", class: "cm-insertedLine"})
 const deleted = Decoration.mark({tagName: "del", class: "cm-deletedLine"})
 
@@ -76,14 +76,16 @@ function buildChunkDeco(chunk: Chunk, doc: Text, isA: boolean, highlight: boolea
 
 function getChunkDeco(view: EditorView) {
   let chunks = view.state.field(ChunkField)
-  let {side, highlightChanges, markGutter} = view.state.facet(mergeConfig), isA = side == "a"
+  let {side, highlightChanges, markGutter, overrideChunk} = view.state.facet(mergeConfig), isA = side == "a"
   let builder = new RangeSetBuilder<Decoration>()
   let gutterBuilder = markGutter ? new RangeSetBuilder<GutterMarker>() : null
   let {from, to} = view.viewport
   for (let chunk of chunks) {
     if ((isA ? chunk.fromA : chunk.fromB) >= to) break
-    if ((isA ? chunk.toA : chunk.toB) > from)
-      buildChunkDeco(chunk, view.state.doc, isA, highlightChanges, builder, gutterBuilder)
+    if ((isA ? chunk.toA : chunk.toB) > from) {
+      if (!overrideChunk || !overrideChunk(view.state, chunk, builder, gutterBuilder))
+        buildChunkDeco(chunk, view.state.doc, isA, highlightChanges, builder, gutterBuilder)
+    }
   }
   return {deco: builder.finish(), gutter: gutterBuilder && gutterBuilder.finish()}
 }

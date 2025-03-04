@@ -1,5 +1,5 @@
-import {EditorView} from "@codemirror/view"
-import {EditorState, EditorSelection, Facet, StateEffect, StateField, StateCommand} from "@codemirror/state"
+import {EditorView, Decoration, GutterMarker} from "@codemirror/view"
+import {EditorState, EditorSelection, Facet, StateEffect, StateField, StateCommand, RangeSetBuilder} from "@codemirror/state"
 import {Chunk} from "./chunk"
 
 type Config = {
@@ -9,6 +9,12 @@ type Config = {
   syntaxHighlightDeletions?: boolean,
   syntaxHighlightDeletionsMaxLength?: number,
   mergeControls?: boolean,
+  overrideChunk?: ((
+    state: EditorState,
+    chunk: Chunk,
+    builder: RangeSetBuilder<Decoration>,
+    gutterBuilder: RangeSetBuilder<GutterMarker> | null
+  ) => boolean) | undefined,
   side: "a" | "b"
 }
 
