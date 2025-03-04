@@ -1,12 +1,12 @@
 import {EditorView, Decoration, DecorationSet, WidgetType, gutter, GutterMarker} from "@codemirror/view"
 import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
-        RangeSet, ChangeSet} from "@codemirror/state"
+        Range, RangeSet, ChangeSet} from "@codemirror/state"
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
 import {Chunk, defaultDiffConfig} from "./chunk"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {Change, DiffConfig} from "./diff"
-import {decorateChunks, collapseUnchanged} from "./deco"
+import {decorateChunks, collapseUnchanged, changedText} from "./deco"
 import {baseTheme} from "./theme"
 
 interface UnifiedMergeConfig {
@@ -22,6 +22,10 @@ interface UnifiedMergeConfig {
   /// documents, this doesn't always work well. Set this option to
   /// false to disable syntax highlighting for deleted lines.
   syntaxHighlightDeletions?: boolean
+  /// When enabled (off by default), chunks that look like they
+  /// contain only inline changes will have the changes displayed
+  /// inline, rather than as separate deleted/inserted lines.
+  allowInlineDiffs?: boolean
   /// Deleted blocks larger than this size do not get
   /// syntax-highlighted. Defaults to 3000.
   syntaxHighlightDeletionsMaxLength?: number
@@ -74,6 +78,7 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
       syntaxHighlightDeletions: config.syntaxHighlightDeletions !== false,
       syntaxHighlightDeletionsMaxLength: 3000,
       mergeControls: config.mergeControls !== false,
+      overrideChunk: config.allowInlineDiffs ? overrideChunkInline : undefined,
       side: "b"
     }),
     originalDoc.init(() => orig),
@@ -115,15 +120,13 @@ class DeletionWidget extends WidgetType {
   toDOM(view: EditorView) { return this.dom || (this.dom = this.buildDOM(view)) }
 }
 
-function deletionWidget(state: EditorState, chunk: Chunk) {
+function deletionWidget(state: EditorState, chunk: Chunk, hideContent: boolean) {
   let known = DeletionWidgets.get(chunk.changes)
   if (known) return known
 
   let buildDOM = (view: EditorView) => {
     let {highlightChanges, syntaxHighlightDeletions, syntaxHighlightDeletionsMaxLength, mergeControls} =
       state.facet(mergeConfig)
-    let text = view.state.field(originalDoc).sliceString(chunk.fromA, chunk.endA)
-    let lang = syntaxHighlightDeletions && state.facet(language)
     let dom = document.createElement("div")
     dom.className = "cm-deletedChunk"
     if (mergeControls) {
@@ -138,8 +141,10 @@ function deletionWidget(state: EditorState, chunk: Chunk) {
       reject.textContent = state.phrase("Reject")
       reject.onmousedown = e => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)) }
     }
-    if (chunk.fromA >= chunk.toA) return dom
+    if (hideContent || chunk.fromA >= chunk.toA) return dom
 
+    let text = view.state.field(originalDoc).sliceString(chunk.fromA, chunk.endA)
+    let lang = syntaxHighlightDeletions && state.facet(language)
     let line: HTMLElement = makeLine()
     let changes = chunk.changes, changeI = 0, inside = false
     function makeLine() {
@@ -242,7 +247,7 @@ export function rejectChunk(view: EditorView, pos?: number) {
 function buildDeletedChunks(state: EditorState) {
   let builder = new RangeSetBuilder<Decoration>()
   for (let ch of state.field(ChunkField))
-    builder.add(ch.fromB, ch.fromB, deletionWidget(state, ch))
+    builder.add(ch.fromB, ch.fromB, deletionWidget(state, ch, !!chunkCanDisplayInline(state, ch)))
   return builder.finish()
 }
 
@@ -253,3 +258,70 @@ const deletedChunks = StateField.define<DecorationSet>({
   },
   provide: f => EditorView.decorations.from(f)
 })
+
+const InlineChunkCache = new WeakMap<Chunk, readonly Range<Decoration>[] | null>()
+
+function chunkCanDisplayInline(state: EditorState, chunk: Chunk): readonly Range<Decoration>[] | null {
+  let result = InlineChunkCache.get(chunk)
+  if (result !== undefined) return result
+
+  result = null
+  let a = state.field(originalDoc), b = state.doc
+  let linesA = a.lineAt(chunk.toA).number - a.lineAt(chunk.fromA).number
+  let linesB = b.lineAt(chunk.toB).number - b.lineAt(chunk.fromB).number
+  abort: if (linesA == linesB && linesA < 10) {
+    let deco: Range<Decoration>[] = [], deleteCount = 0
+    let bA = chunk.fromA, bB = chunk.fromB
+    for (let ch of chunk.changes) {
+      if (ch.fromB < ch.toB) {
+        deco.push(changedText.range(bB + ch.fromB, bB + ch.toB))
+      }
+      if (ch.fromA < ch.toA) {
+        deleteCount += ch.toA - ch.fromA
+        let deleted = a.sliceString(bA + ch.fromA, bA + ch.toA)
+        if (/\n/.test(deleted)) break abort
+        deco.push(Decoration.widget({widget: new InlineDeletion(deleted), side: 1}).range(bB + ch.toB))
+      }
+    }
+    if (deleteCount < (chunk.toA - chunk.fromA - linesA * 2)) result = deco
+  }
+
+  InlineChunkCache.set(chunk, result)
+  return result
+}
+
+class InlineDeletion extends WidgetType {
+  constructor(readonly text: string) { super() }
+
+  eq(other: InlineDeletion) { return this.text == other.text }
+
+  toDOM(view: EditorView) {
+    let elt = document.createElement("del")
+    elt.className = "cm-deletedText"
+    elt.textContent = this.text
+    return elt
+  }
+}
+
+const inlineChangedLineGutterMarker = new class extends GutterMarker {
+  elementClass = "cm-inlineChangedLineGutter"
+}
+
+function overrideChunkInline(
+  state: EditorState,
+  chunk: Chunk,
+  builder: RangeSetBuilder<Decoration>,
+  gutterBuilder: RangeSetBuilder<GutterMarker> | null
+) {
+  let inline = chunkCanDisplayInline(state, chunk)
+  if (!inline) return false
+  for (let r of inline) builder.add(r.from, r.to, r.value)
+  if (gutterBuilder) {
+    for (let line = state.doc.lineAt(chunk.fromB);;) {
+      gutterBuilder.add(line.from, line.from, inlineChangedLineGutterMarker)
+      if (line.to >= chunk.toB - 1) break
+      line = state.doc.lineAt(line.to + 1)
+    }
+  }
+  return true
+}

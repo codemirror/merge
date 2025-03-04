@@ -55,11 +55,15 @@ export const baseTheme = EditorView.baseTheme({
   },
 
   "&light.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#22bb2266, #22bb2266) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#22bb22aa, #22bb22aa) bottom/100% 2px no-repeat",
   },
 
   "&dark.cm-merge-b .cm-changedText": {
-    background: "linear-gradient(#88ff8866, #88ff8866) bottom/100% 2px no-repeat",
+    background: "linear-gradient(#88ff88aa, #88ff88aa) bottom/100% 2px no-repeat",
+  },
+
+  "&.cm-merge-b .cm-deletedText": {
+    background: "#ff000033"
   },
 
   ".cm-insertedLine, .cm-deletedLine, .cm-deletedLine del": {
@@ -109,4 +113,5 @@ export const baseTheme = EditorView.baseTheme({
   "&dark.cm-merge-a .cm-changedLineGutter, &dark .cm-deletedLineGutter": { background: "#fa9" },
   "&light.cm-merge-b .cm-changedLineGutter": { background: "#2b2" },
   "&dark.cm-merge-b .cm-changedLineGutter": { background: "#8f8" },
+  ".cm-inlineChangedLineGutter": { background: "#75d" }
 })
