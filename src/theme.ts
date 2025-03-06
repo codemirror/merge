@@ -42,7 +42,7 @@ export const baseTheme = EditorView.baseTheme({
   "&.cm-merge-a .cm-changedLine, .cm-deletedChunk": {
     backgroundColor: "rgba(160, 128, 100, .08)"
   },
-  "&.cm-merge-b .cm-changedLine": {
+  "&.cm-merge-b .cm-changedLine, .cm-inlineChangedLine": {
     backgroundColor: "rgba(100, 160, 128, .08)"
   },
 

@@ -308,6 +308,7 @@ class InlineDeletion extends WidgetType {
 const inlineChangedLineGutterMarker = new class extends GutterMarker {
   elementClass = "cm-inlineChangedLineGutter"
 }
+const inlineChangedLine = Decoration.line({class: "cm-inlineChangedLine"})
 
 function overrideChunkInline(
   state: EditorState,
@@ -315,15 +316,17 @@ function overrideChunkInline(
   builder: RangeSetBuilder<Decoration>,
   gutterBuilder: RangeSetBuilder<GutterMarker> | null
 ) {
-  let inline = chunkCanDisplayInline(state, chunk)
+  let inline = chunkCanDisplayInline(state, chunk), i = 0
   if (!inline) return false
-  for (let r of inline) builder.add(r.from, r.to, r.value)
-  if (gutterBuilder) {
-    for (let line = state.doc.lineAt(chunk.fromB);;) {
-      gutterBuilder.add(line.from, line.from, inlineChangedLineGutterMarker)
-      if (line.to >= chunk.endB) break
-      line = state.doc.lineAt(line.to + 1)
+  for (let line = state.doc.lineAt(chunk.fromB);;) {
+    if (gutterBuilder) gutterBuilder.add(line.from, line.from, inlineChangedLineGutterMarker)
+    builder.add(line.from, line.from, inlineChangedLine)
+    while (i < inline.length && inline[i].to <= line.to) {
+      let r = inline[i++]
+      builder.add(r.from, r.to, r.value)
     }
+    if (line.to >= chunk.endB) break
+    line = state.doc.lineAt(line.to + 1)
   }
   return true
 }
