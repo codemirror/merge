@@ -246,8 +246,10 @@ export function rejectChunk(view: EditorView, pos?: number) {
 
 function buildDeletedChunks(state: EditorState) {
   let builder = new RangeSetBuilder<Decoration>()
-  for (let ch of state.field(ChunkField))
-    builder.add(ch.fromB, ch.fromB, deletionWidget(state, ch, !!chunkCanDisplayInline(state, ch)))
+  for (let ch of state.field(ChunkField)) {
+    let hide = state.facet(mergeConfig).overrideChunk && chunkCanDisplayInline(state, ch)
+    builder.add(ch.fromB, ch.fromB, deletionWidget(state, ch, !!hide))
+  }
   return builder.finish()
 }
 
