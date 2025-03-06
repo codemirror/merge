@@ -1,3 +1,9 @@
+## 6.10.0 (2025-03-06)
+
+### New features
+
+The new `allowInlineDiffs` option to `unifiedMergeView` will display chunks with only limited inline changes inline in the code.
+
 ## 6.9.0 (2025-03-03)
 
 ### New features
