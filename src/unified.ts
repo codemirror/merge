@@ -275,14 +275,14 @@ function chunkCanDisplayInline(state: EditorState, chunk: Chunk): readonly Range
     let deco: Range<Decoration>[] = [], deleteCount = 0
     let bA = chunk.fromA, bB = chunk.fromB
     for (let ch of chunk.changes) {
-      if (ch.fromB < ch.toB) {
-        deco.push(changedText.range(bB + ch.fromB, bB + ch.toB))
-      }
       if (ch.fromA < ch.toA) {
         deleteCount += ch.toA - ch.fromA
         let deleted = a.sliceString(bA + ch.fromA, bA + ch.toA)
         if (/\n/.test(deleted)) break abort
-        deco.push(Decoration.widget({widget: new InlineDeletion(deleted), side: 1}).range(bB + ch.toB))
+        deco.push(Decoration.widget({widget: new InlineDeletion(deleted), side: -1}).range(bB + ch.fromB))
+      }
+      if (ch.fromB < ch.toB) {
+        deco.push(changedText.range(bB + ch.fromB, bB + ch.toB))
       }
     }
     if (deleteCount < (chunk.endA - chunk.fromA - linesA * 2)) result = deco
