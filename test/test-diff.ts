@@ -136,6 +136,8 @@ describe("presentableDiff", () => {
   test("does grow long insertions", "[oaks/oaktrees]")
   test("does grow long deletions", "[oaktrees/oaks]")
 
+  test("covers words that contain other changes", "[Threepwood/three]")
+
   test("aligns to the end of words", "fromA[/ + offA]")
   test("aligns to the start of words", "[offA + /]fromA")
 

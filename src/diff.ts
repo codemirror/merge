@@ -321,30 +321,29 @@ function makePresentable(changes: Change[], a: string, b: string) {
     if (lenA && lenB || lenA > 3 || lenB > 3) {
       let nextChangeA = i == changes.length - 1 ? a.length : changes[i + 1].fromA
       let maxScanBefore = change.fromA - posA, maxScanAfter = nextChangeA - change.toA
-      let boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(maxScanBefore, 5))
-      let boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(maxScanAfter, 5))
+      let boundBefore = findWordBoundaryBefore(a, change.fromA, maxScanBefore)
+      let boundAfter = findWordBoundaryAfter(a, change.toA, maxScanAfter)
       let lenBefore = change.fromA - boundBefore, lenAfter = boundAfter - change.toA
-      if (!lenA || !lenB) {
+      // An insertion or deletion that falls inside words on both
+      // sides can maybe be moved to align with word boundaries.
+      if ((!lenA || !lenB) && lenBefore && lenAfter) {
         let changeLen = Math.max(lenA, lenB)
         let [changeText, changeFrom, changeTo] = lenA ? [a, change.fromA, change.toA] : [b, change.fromB, change.toB]
-        // An insertion or deletion that falls inside words on both
-        // sides can maybe be moved to align with word boundaries.
-        if (lenBefore && lenAfter) {
-          if (changeLen > lenBefore &&
-              a.slice(boundBefore, change.fromA) == changeText.slice(changeTo - lenBefore, changeTo)) {
-            change = changes[i] = new Change(boundBefore, boundBefore + lenA, change.fromB - lenBefore, change.toB - lenBefore)
-            boundBefore = change.fromA
-            boundAfter = findWordBoundaryAfter(a, change.toA, Math.min(nextChangeA - change.toA, 5))
-          } else if (changeLen > lenAfter &&
-                     a.slice(change.toA, boundAfter) == changeText.slice(changeFrom, changeFrom + lenAfter)) {
+        if (changeLen > lenBefore &&
+            a.slice(boundBefore, change.fromA) == changeText.slice(changeTo - lenBefore, changeTo)) {
+          change = changes[i] = new Change(boundBefore, boundBefore + lenA, change.fromB - lenBefore, change.toB - lenBefore)
+          boundBefore = change.fromA
+          boundAfter = findWordBoundaryAfter(a, change.toA, nextChangeA - change.toA)
+        } else if (changeLen > lenAfter &&
+                   a.slice(change.toA, boundAfter) == changeText.slice(changeFrom, changeFrom + lenAfter)) {
             change = changes[i] = new Change(boundAfter - lenA, boundAfter, change.fromB + lenAfter, change.toB + lenAfter)
             boundAfter = change.toA
-            boundBefore = findWordBoundaryBefore(a, change.fromA, Math.min(change.fromA - posA, 5))
-          }
-          lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
+            boundBefore = findWordBoundaryBefore(a, change.fromA, change.fromA - posA)
         }
+        lenBefore = change.fromA - boundBefore; lenAfter = boundAfter - change.toA
       }
       if (lenBefore || lenAfter) {
+        // Expand the change to cover the entire word
         change = changes[i] = new Change(change.fromA - lenBefore, change.toA + lenAfter,
                                          change.fromB - lenBefore, change.toB + lenAfter)
       } else if (!lenA) {
@@ -368,9 +367,8 @@ function makePresentable(changes: Change[], a: string, b: string) {
                  a.slice(change.fromA - len, change.fromA) == a.slice(last, change.toA))
           change = changes[i] = change.offset(-len)
       }
-      // Grow the change to the word boundaries.
-      posA = change.toA
     }
+    posA = change.toA
   }
 
   mergeAdjacent(changes, 3)
@@ -402,24 +400,26 @@ function wordCharBefore(s: string, pos: number) {
   return wordChar.test(s.slice(pos - 2, pos)) ? 2 : 0
 }
 
+const MAX_SCAN = 8
+
 function findWordBoundaryAfter(s: string, pos: number, max: number) {
   if (pos == s.length || !wordCharBefore(s, pos)) return pos
-  for (let cur = pos, end = pos + max;;) {
+  for (let cur = pos, end = pos + max, i = 0; i < MAX_SCAN; i++) {
     let size = wordCharAfter(s, cur)
-    if (!size) return cur
+    if (!size || cur + size > end) return cur
     cur += size
-    if (cur > end) return pos
   }
+  return pos
 }
 
 function findWordBoundaryBefore(s: string, pos: number, max: number) {
   if (!pos || !wordCharAfter(s, pos)) return pos
-  for (let cur = pos, end = pos - max;;) {
+  for (let cur = pos, end = pos - max, i = 0; i < MAX_SCAN; i++) {
     let size = wordCharBefore(s, cur)
-    if (!size) return cur
+    if (!size || cur - size < end) return cur
     cur -= size
-    if (cur < end) return pos
   }
+  return pos
 }
 
 function findLineBreakBefore(s: string, pos: number, stop: number) {
