@@ -99,9 +99,9 @@ function findSnake(a: string, fromA: number, toA: number, b: string, fromB: numb
 
 class Frontier {
   vec: number[] = []
-  len!: number
-  start!: number
-  end!: number
+  declare len: number
+  declare start: number
+  declare end: number
 
   reset(off: number) {
     this.len = off << 1
