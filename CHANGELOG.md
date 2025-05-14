@@ -1,3 +1,9 @@
+## 6.10.1 (2025-05-14)
+
+### Bug fixes
+
+Fix an issue in `presentableDiff` where it sometimes doesn't expand changes over words with multiple individual changes in them.
+
 ## 6.10.0 (2025-03-06)
 
 ### New features
