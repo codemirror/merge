@@ -4,7 +4,7 @@ import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
 import {Chunk, defaultDiffConfig} from "./chunk"
-import {setChunks, ChunkField, mergeConfig} from "./merge"
+import {computeChunks, ChunkField, mergeConfig} from "./merge"
 import {Change, DiffConfig} from "./diff"
 import {decorateChunks, collapseUnchanged, changedText} from "./deco"
 import {baseTheme} from "./theme"
@@ -64,13 +64,11 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
     deletedChunks,
     baseTheme,
     EditorView.editorAttributes.of({class: "cm-merge-b"}),
-    EditorState.transactionExtender.of(tr => {
+    computeChunks.of((chunks, tr) => {
       let updateDoc = tr.effects.find(e => e.is(updateOriginalDoc))
-      if (!tr.docChanged && !updateDoc) return null
-      let chunks = tr.startState.field(ChunkField)
       if (updateDoc) chunks = Chunk.updateA(chunks, updateDoc.value.doc, tr.startState.doc, updateDoc.value.changes, diffConf)
-      if (tr.docChanged) chunks = Chunk.updateB(chunks, tr.startState.field(originalDoc), tr.newDoc, tr.changes, diffConf)
-      return {effects: setChunks.of(chunks)}
+      if (tr.docChanged) chunks = Chunk.updateB(chunks, tr.state.field(originalDoc), tr.newDoc, tr.changes, diffConf)
+      return chunks
     }),
     mergeConfig.of({
       highlightChanges: config.highlightChanges !== false,
