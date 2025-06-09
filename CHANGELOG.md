@@ -1,3 +1,9 @@
+## 6.10.2 (2025-06-09)
+
+### Bug fixes
+
+Fix an issue where chunks in the unified diff weren't updated properly when a single transaction changed for the original and the edited document.
+
 ## 6.10.1 (2025-05-14)
 
 ### Bug fixes
