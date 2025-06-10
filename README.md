@@ -233,6 +233,12 @@ in changed chunks. Set this to false to turn that off.</p>
 editor's language. Since these are just fragments, not full
 documents, this doesn't always work well. Set this option to
 false to disable syntax highlighting for deleted lines.</p>
+</dd><dt id="user-content-unifiedmergeview^config.allowinlinediffs">
+  <code><strong><a href="#user-content-unifiedmergeview^config.allowinlinediffs">allowInlineDiffs</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code></dt>
+
+<dd><p>When enabled (off by default), chunks that look like they
+contain only inline changes will have the changes displayed
+inline, rather than as separate deleted/inserted lines.</p>
 </dd><dt id="user-content-unifiedmergeview^config.syntaxhighlightdeletionsmaxlength">
   <code><strong><a href="#user-content-unifiedmergeview^config.syntaxhighlightdeletionsmaxlength">syntaxHighlightDeletionsMaxLength</a></strong>&#8288;?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a></code></dt>
 
