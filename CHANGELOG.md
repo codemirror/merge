@@ -251,6 +251,7 @@ The new `orientation` option makes it possible to show editor B first.
 ### Bug fixes
 
 Color changed chunks in editor A red by default.
+
 ## 0.1.0 (2022-11-10)
 
 ### Breaking changes
