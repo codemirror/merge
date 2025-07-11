@@ -30,8 +30,9 @@ interface UnifiedMergeConfig {
   /// syntax-highlighted. Defaults to 3000.
   syntaxHighlightDeletionsMaxLength?: number
   /// Controls whether accept/reject buttons are displayed for each
-  /// changed chunk. Defaults to true.
-  mergeControls?: boolean
+  /// changed chunk. Defaults to true. When set to a function, that
+  /// function is used to render the buttons.
+  mergeControls?: boolean | ((type: "reject" | "accept", action: (e: MouseEvent) => void) => HTMLElement)
   /// Pass options to the diff algorithm. By default, the merge view
   /// sets [`scanLimit`](#merge.DiffConfig.scanLimit) to 500.
   diffConfig?: DiffConfig
@@ -75,7 +76,7 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
       markGutter: config.gutter !== false,
       syntaxHighlightDeletions: config.syntaxHighlightDeletions !== false,
       syntaxHighlightDeletionsMaxLength: 3000,
-      mergeControls: config.mergeControls !== false,
+      mergeControls: config.mergeControls ?? true,
       overrideChunk: config.allowInlineDiffs ? overrideChunkInline : undefined,
       side: "b"
     }),
@@ -130,14 +131,21 @@ function deletionWidget(state: EditorState, chunk: Chunk, hideContent: boolean) 
     if (mergeControls) {
       let buttons = dom.appendChild(document.createElement("div"))
       buttons.className = "cm-chunkButtons"
-      let accept = buttons.appendChild(document.createElement("button"))
-      accept.name = "accept"
-      accept.textContent = state.phrase("Accept")
-      accept.onmousedown = e => { e.preventDefault(); acceptChunk(view, view.posAtDOM(dom)) }
-      let reject = buttons.appendChild(document.createElement("button"))
-      reject.name = "reject"
-      reject.textContent = state.phrase("Reject")
-      reject.onmousedown = e => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)) }
+      let onAccept = (e: MouseEvent) => { e.preventDefault(); acceptChunk(view, view.posAtDOM(dom)) }
+      let onReject = (e: MouseEvent) => { e.preventDefault(); rejectChunk(view, view.posAtDOM(dom)) }
+      if (typeof mergeControls == "function") {
+        buttons.appendChild(mergeControls("accept", onAccept))
+        buttons.appendChild(mergeControls("reject", onReject))
+      } else {
+        let accept = buttons.appendChild(document.createElement("button"))
+        accept.name = "accept"
+        accept.textContent = state.phrase("Accept")
+        accept.onmousedown = onAccept
+        let reject = buttons.appendChild(document.createElement("button"))
+        reject.name = "reject"
+        reject.textContent = state.phrase("Reject")
+        reject.onmousedown = onReject
+      }
     }
     if (hideContent || chunk.fromA >= chunk.toA) return dom
 

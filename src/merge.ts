@@ -9,7 +9,7 @@ type Config = {
   markGutter: boolean,
   syntaxHighlightDeletions?: boolean,
   syntaxHighlightDeletionsMaxLength?: number,
-  mergeControls?: boolean,
+  mergeControls?: boolean | ((type: "accept" | "reject", action: (event: MouseEvent) => void) => HTMLElement),
   overrideChunk?: ((
     state: EditorState,
     chunk: Chunk,
