@@ -1,3 +1,9 @@
+## 6.11.0 (2025-10-02)
+
+### New features
+
+The `mergeControls` option to the unified merge view can now be a function, which will be used to render the buttons.
+
 ## 6.10.2 (2025-06-09)
 
 ### Bug fixes
