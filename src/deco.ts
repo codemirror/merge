@@ -225,6 +225,14 @@ export const uncollapseUnchanged = StateEffect.define<number>({
   map: (value, change) => change.mapPos(value)
 })
 
+/// Query whether the given view is displayed next to another editor
+/// in a merge view. Returns `null` if it isn't, and a pair of editors
+/// (one of which will be the view itself) otherwise.
+export function mergeViewSiblings(view: EditorView) {
+  let {side, sibling} = view.state.facet(mergeConfig)
+  return !sibling ? null : side == "a" ? {a: view, b: sibling()} : {a: sibling(), b: view}
+}
+
 class CollapseWidget extends WidgetType {
   constructor(readonly lines: number) { super() }
 

@@ -6,6 +6,8 @@
 
 @MergeView
 
+@mergeViewSiblings
+
 @uncollapseUnchanged
 
 ### Unified Merge View
