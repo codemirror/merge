@@ -229,8 +229,8 @@ export const uncollapseUnchanged = StateEffect.define<number>({
 /// in a merge view. Returns `null` if it isn't, and a pair of editors
 /// (one of which will be the view itself) otherwise.
 export function mergeViewSiblings(view: EditorView) {
-  let {side, sibling} = view.state.facet(mergeConfig)
-  return !sibling ? null : side == "a" ? {a: view, b: sibling()} : {a: sibling(), b: view}
+  let conf = view.state.facet(mergeConfig)
+  return !conf || !conf.sibling ? null : conf.side == "a" ? {a: view, b: conf.sibling()} : {a: conf.sibling(), b: view}
 }
 
 class CollapseWidget extends WidgetType {
