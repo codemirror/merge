@@ -1,3 +1,9 @@
+## 6.11.1 (2025-10-23)
+
+### Bug fixes
+
+Export a function  that allows you to find the sibling of a given editor in a merge view.
+
 ## 6.11.0 (2025-10-02)
 
 ### New features
