@@ -1,3 +1,9 @@
+## 6.11.2 (2025-11-07)
+
+### Bug fixes
+
+Fix a bug in `Chunk.updateA`/`updateB` that would cause it to drop an insertion or deletion chunk at the very end of the document.
+
 ## 6.11.1 (2025-10-23)
 
 ### Bug fixes
