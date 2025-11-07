@@ -120,4 +120,15 @@ describe("chunks", () => {
     ist(updated[0].precise)
     ist(!updated[1].precise)
   })
+
+  it("properly copies over unaffected insertion/deletion chunks at end of doc", () => {
+    let identical = `\n\n${"A".repeat(896)}\n${"B".repeat(112)}\n\n\n\n\nG`
+    let sA = EditorState.create({doc: `AB${identical}`})
+    let sB = EditorState.create({doc: `A${identical}\nH\nI\nJ`})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    ist(chs.length, 2)
+    let tr = sA.update({changes: {from: 1, to: 1, insert: "!"}})
+    let updated = Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes)
+    ist(updated.length, 2)
+  })
 })
