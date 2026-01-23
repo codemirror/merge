@@ -3,7 +3,7 @@ import {EditorState, Text, Prec, RangeSetBuilder, StateField, StateEffect,
         Range, RangeSet, ChangeSet} from "@codemirror/state"
 import {language, highlightingFor} from "@codemirror/language"
 import {highlightTree} from "@lezer/highlight"
-import {Chunk, defaultDiffConfig} from "./chunk"
+import {Chunk, defaultDiffConfig, ExternalDiff, fillChunkChanges} from "./chunk"
 import {computeChunks, ChunkField, mergeConfig} from "./merge"
 import {Change, DiffConfig} from "./diff"
 import {decorateChunks, collapseUnchanged, changedText} from "./deco"
@@ -41,6 +41,12 @@ interface UnifiedMergeConfig {
   /// a change (default is 3), and `minSize` gives the minimum amount
   /// of collapsible lines that need to be present (defaults to 4).
   collapseUnchanged?: {margin?: number, minSize?: number},
+  /// When provided, uses an external diff source instead of the
+  /// built-in diff algorithm. Can be either a static array of chunks,
+  /// or a function that computes chunks from the two documents.
+  /// Chunks may have empty `changes` arrays—character-level changes
+  /// will be computed automatically.
+  externalDiff?: ExternalDiff
 }
 
 const deletedChunkGutterMarker = new class extends GutterMarker {
@@ -60,6 +66,14 @@ const unifiedChangeGutter = Prec.low(gutter({
 export function unifiedMergeView(config: UnifiedMergeConfig) {
   let orig = typeof config.original == "string" ? Text.of(config.original.split(/\r?\n/)) : config.original
   let diffConf = config.diffConfig || defaultDiffConfig
+  let extDiff = config.externalDiff
+
+  function buildChunks(a: Text, b: Text): readonly Chunk[] {
+    if (!extDiff) return Chunk.build(a, b, diffConf)
+    let chunks = typeof extDiff === "function" ? extDiff(a, b) : extDiff
+    return fillChunkChanges(chunks, a, b, diffConf)
+  }
+
   return [
     Prec.low(decorateChunks),
     deletedChunks,
@@ -67,8 +81,14 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
     EditorView.editorAttributes.of({class: "cm-merge-b"}),
     computeChunks.of((chunks, tr) => {
       let updateDoc = tr.effects.find(e => e.is(updateOriginalDoc))
-      if (updateDoc) chunks = Chunk.updateA(chunks, updateDoc.value.doc, tr.startState.doc, updateDoc.value.changes, diffConf)
-      if (tr.docChanged) chunks = Chunk.updateB(chunks, tr.state.field(originalDoc), tr.newDoc, tr.changes, diffConf)
+      if (typeof extDiff === "function") {
+        if (updateDoc || tr.docChanged)
+          return buildChunks(updateDoc ? updateDoc.value.doc : tr.state.field(originalDoc), tr.newDoc)
+      } else if (!extDiff) {
+        if (updateDoc) chunks = Chunk.updateA(chunks, updateDoc.value.doc, tr.startState.doc, updateDoc.value.changes, diffConf)
+        if (tr.docChanged) chunks = Chunk.updateB(chunks, tr.state.field(originalDoc), tr.newDoc, tr.changes, diffConf)
+      }
+      // Static externalDiff keeps chunks unchanged
       return chunks
     }),
     mergeConfig.of({
@@ -83,7 +103,7 @@ export function unifiedMergeView(config: UnifiedMergeConfig) {
     originalDoc.init(() => orig),
     config.gutter !== false ? unifiedChangeGutter : [],
     config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [],
-    ChunkField.init(state => Chunk.build(orig, state.doc, diffConf))
+    ChunkField.init(state => buildChunks(orig, state.doc))
   ]
 }
 

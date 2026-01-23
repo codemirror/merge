@@ -1,6 +1,14 @@
 import {Text, ChangeDesc} from "@codemirror/state"
 import {Change, presentableDiff, DiffConfig, diffIsPrecise} from "./diff"
 
+/// An external diff source. Can be either a static array of chunks,
+/// or a function that computes chunks reactively when documents change.
+/// Chunks may have empty `changes` arrays—character-level changes will
+/// be computed automatically in that case.
+export type ExternalDiff =
+  | readonly Chunk[]
+  | ((a: Text, b: Text) => readonly Chunk[])
+
 /// A chunk describes a range of lines which have changed content in
 /// them. Either side (a/b) may either be empty (when its `to` is
 /// equal to its `from`), or points at a range starting at the start
@@ -167,3 +175,25 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
 }
 
 export const defaultDiffConfig = {scanLimit: 500}
+
+/// Fill in character-level changes for chunks that have empty `changes` arrays.
+export function fillChunkChanges(
+  chunks: readonly Chunk[],
+  a: Text,
+  b: Text,
+  conf?: DiffConfig
+): readonly Chunk[] {
+  let result: Chunk[] = []
+  for (let chunk of chunks) {
+    if (chunk.changes.length > 0) {
+      result.push(chunk)
+    } else {
+      let textA = a.sliceString(chunk.fromA, Math.max(chunk.fromA, chunk.toA - 1))
+      let textB = b.sliceString(chunk.fromB, Math.max(chunk.fromB, chunk.toB - 1))
+      let diff = presentableDiff(textA, textB, conf)
+      let changes = diff.map(c => c.offset(-chunk.fromA, -chunk.fromB))
+      result.push(new Chunk(changes, chunk.fromA, chunk.toA, chunk.fromB, chunk.toB, chunk.precise))
+    }
+  }
+  return result
+}

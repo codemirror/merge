@@ -9,4 +9,4 @@ export {unifiedMergeView, acceptChunk, rejectChunk, getOriginalDoc,
 
 export {uncollapseUnchanged, mergeViewSiblings} from "./deco"
 
-export {Chunk} from "./chunk"
+export {Chunk, ExternalDiff, fillChunkChanges} from "./chunk"

@@ -1,6 +1,6 @@
 import {EditorView} from "@codemirror/view"
-import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet} from "@codemirror/state"
-import {Chunk, defaultDiffConfig} from "./chunk"
+import {EditorStateConfig, Transaction, EditorState, StateEffect, Prec, Compartment, ChangeSet, Text} from "@codemirror/state"
+import {Chunk, defaultDiffConfig, ExternalDiff, fillChunkChanges} from "./chunk"
 import {DiffConfig} from "./diff"
 import {setChunks, ChunkField, mergeConfig} from "./merge"
 import {decorateChunks, updateSpacers, Spacers, adjustSpacers, collapseUnchanged, changeGutter} from "./deco"
@@ -31,6 +31,12 @@ export interface MergeConfig {
   /// Pass options to the diff algorithm. By default, the merge view
   /// sets [`scanLimit`](#merge.DiffConfig.scanLimit) to 500.
   diffConfig?: DiffConfig
+  /// When provided, uses an external diff source instead of the
+  /// built-in diff algorithm. Can be either a static array of chunks,
+  /// or a function that computes chunks from the two documents.
+  /// Chunks may have empty `changes` arrays—character-level changes
+  /// will be computed automatically.
+  externalDiff?: ExternalDiff
 }
 
 /// Configuration options given to the [`MergeView`](#merge.MergeView)
@@ -72,6 +78,7 @@ export class MergeView {
   private revertToLeft = false
   private renderRevert: (() => HTMLElement) | undefined
   private diffConf: DiffConfig | undefined
+  private externalDiff: ExternalDiff | undefined
 
   /// The current set of changed chunks.
   chunks: readonly Chunk[]
@@ -81,6 +88,7 @@ export class MergeView {
   /// Create a new merge view.
   constructor(config: DirectMergeConfig) {
     this.diffConf = config.diffConfig || defaultDiffConfig
+    this.externalDiff = config.externalDiff
 
     let sharedExtensions = [
       Prec.low(decorateChunks),
@@ -129,7 +137,7 @@ export class MergeView {
         sharedExtensions
       ]
     })
-    this.chunks = Chunk.build(stateA.doc, stateB.doc, this.diffConf)
+    this.chunks = this.buildChunks(stateA.doc, stateB.doc)
     let add = [
       ChunkField.init(() => this.chunks),
       collapseCompartment.of(config.collapseUnchanged ? collapseUnchanged(config.collapseUnchanged) : [])
@@ -165,12 +173,27 @@ export class MergeView {
     this.scheduleMeasure()
   }
 
+  private buildChunks(a: Text, b: Text): readonly Chunk[] {
+    if (!this.externalDiff) return Chunk.build(a, b, this.diffConf)
+    let chunks = typeof this.externalDiff === "function"
+      ? this.externalDiff(a, b)
+      : this.externalDiff
+    return fillChunkChanges(chunks, a, b, this.diffConf)
+  }
+
   private dispatch(trs: readonly Transaction[], target: EditorView) {
     if (trs.some(tr => tr.docChanged)) {
       let last = trs[trs.length - 1]
       let changes = trs.reduce((chs, tr) => chs.compose(tr.changes), ChangeSet.empty(trs[0].startState.doc.length))
-      this.chunks = target == this.a ? Chunk.updateA(this.chunks, last.newDoc, this.b.state.doc, changes, this.diffConf)
-        : Chunk.updateB(this.chunks, this.a.state.doc, last.newDoc, changes, this.diffConf)
+      if (typeof this.externalDiff === "function") {
+        let a = target == this.a ? last.newDoc : this.a.state.doc
+        let b = target == this.b ? last.newDoc : this.b.state.doc
+        this.chunks = this.buildChunks(a, b)
+      } else if (!this.externalDiff) {
+        this.chunks = target == this.a ? Chunk.updateA(this.chunks, last.newDoc, this.b.state.doc, changes, this.diffConf)
+          : Chunk.updateB(this.chunks, this.a.state.doc, last.newDoc, changes, this.diffConf)
+      }
+      // Static externalDiff keeps chunks unchanged
       target.update([...trs, last.state.update({effects: setChunks.of(this.chunks)})])
       let other = target == this.a ? this.b : this.a
       other.update([other.state.update({effects: setChunks.of(this.chunks)})])
