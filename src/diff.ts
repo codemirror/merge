@@ -454,10 +454,15 @@ export interface DiffConfig {
   /// number of milliseconds, it aborts detailed diffing in falls back
   /// to the imprecise algorithm.
   timeout?: number
+  /// Provide your own diff algorithm, replacing this package's `diff`
+  /// function.
+  override?: (a: string, b: string) => readonly Change[]
 }
 
 /// Compute the difference between two strings.
 export function diff(a: string, b: string, config?: DiffConfig): readonly Change[] {
+  let override = config?.override
+  if (override) return override(a, b)
   scanLimit = (config?.scanLimit ?? 1e9) >> 1
   timeout = config?.timeout ? Date.now() + config.timeout : 0
   crude = false
