@@ -1,3 +1,13 @@
+## 6.12.0 (2026-02-15)
+
+### Bug fixes
+
+Fix an issue where a change that made both documents empty could leave an invalid chunk.
+
+### New features
+
+The diffing routine used can now be replaced with a custom implementation via `DiffConfig.override`.
+
 ## 6.11.2 (2025-11-07)
 
 ### Bug fixes
