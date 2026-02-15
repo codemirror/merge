@@ -141,13 +141,13 @@ function findRangesForChange(chunks: readonly Chunk[], changes: ChangeDesc, isA:
 function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
                       a: Text, b: Text, conf?: DiffConfig): readonly Chunk[] {
   if (!ranges.length) return chunks
-  let result = []
+  let result: Chunk[] = []
   for (let i = 0, offA = 0, offB = 0, chunkI = 0;; i++) {
     let range = i == ranges.length ? null : ranges[i]
     let fromA = range ? range.fromA + offA : a.length, fromB = range ? range.fromB + offB : b.length
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (Math.min(a.length, next.toA + offA) > fromA || Math.min(b.length, next.toB + offB) > fromB) break
+      if (next.endA + offA > fromA || next.endB + offB > fromB) break
       result.push(next.offset(offA, offB))
       chunkI++
     }

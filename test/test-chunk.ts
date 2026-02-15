@@ -131,4 +131,13 @@ describe("chunks", () => {
     let updated = Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes)
     ist(updated.length, 2)
   })
+
+  it("correctly handles changes to empty doc", () => {
+    let sA = EditorState.create(), sB = EditorState.create({doc: "a"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    ist(chs.length, 1)
+    let tr = sB.update({changes: {from: 0, to: 1,}})
+    let updated = Chunk.updateB(chs, sA.doc, tr.newDoc, tr.changes)
+    ist(updated.length, 0)
+  })
 })
