@@ -1,3 +1,9 @@
+## 6.12.1 (2026-03-11)
+
+### Bug fixes
+
+Fix an issue in chunk recomputation where it might duplicate chunks at the start of the document.
+
 ## 6.12.0 (2026-02-15)
 
 ### Bug fixes
