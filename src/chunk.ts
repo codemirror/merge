@@ -18,7 +18,9 @@ export class Chunk {
     readonly fromA: number,
     /// The end of the chunk in document A. This is equal to `fromA`
     /// when the chunk covers no lines in document A, or is one unit
-    /// past the end of the last line in the chunk if it does.
+    /// past the end of the last line in the chunk if it does. (Note
+    /// that this may point outside the document if the chunk ends at
+    /// the end of the last line. See also `endA`.)
     readonly toA: number,
     /// The start of the chunk in document B.
     readonly fromB: number,
@@ -147,7 +149,7 @@ function updateChunks(ranges: readonly UpdateRange[], chunks: readonly Chunk[],
     let fromA = range ? range.fromA + offA : a.length, fromB = range ? range.fromB + offB : b.length
     while (chunkI < chunks.length) {
       let next = chunks[chunkI]
-      if (next.endA + offA > fromA || next.endB + offB > fromB) break
+      if (range && (next.toA + offA > fromA || next.toB + offB > fromB)) break
       result.push(next.offset(offA, offB))
       chunkI++
     }

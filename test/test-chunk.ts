@@ -140,4 +140,13 @@ describe("chunks", () => {
     let updated = Chunk.updateB(chs, sA.doc, tr.newDoc, tr.changes)
     ist(updated.length, 0)
   })
+
+  it("properly drops ranges at the start of the document", () => {
+    let sA = EditorState.create({doc: "\na\n"}), sB = EditorState.create({doc: "a\n"})
+    let chs = Chunk.build(sA.doc, sB.doc)
+    ist(chs.length, 1)
+    let tr = sA.update({changes: {from: 1, insert: "\n"}})
+    let updated = Chunk.updateA(chs, tr.newDoc, sB.doc, tr.changes)
+    ist(updated.length, 1)
+  })
 })
