@@ -65,7 +65,8 @@ export class Chunk {
 
 function fromLine(fromA: number, fromB: number, a: Text, b: Text) {
   let lineA = a.lineAt(fromA), lineB = b.lineAt(fromB)
-  return lineA.to == fromA && lineB.to == fromB && fromA < a.length && fromB < b.length
+  return lineA.to == fromA && lineB.to == fromB &&
+    (fromA < a.length && fromB < b.length || lineA.from < fromA || lineB.from < fromB)
     ? [fromA + 1, fromB + 1] : [lineA.from, lineB.from]
 }
 
